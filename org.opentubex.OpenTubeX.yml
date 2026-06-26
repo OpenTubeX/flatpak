@@ -60,7 +60,8 @@ modules:
         path: org.opentubex.OpenTubeX.metainfo.xml
     build-commands:
       - unzip opentubex-*.zip -d /app/opentubex
-      - install run.sh /app/bin/
+      - chmod +x /app/opentubex/opentubex
+      - install -m755 run.sh /app/bin/
       - install -Dm644 icon.svg /app/share/icons/hicolor/scalable/apps/org.opentubex.OpenTubeX.svg
       - install -Dm644 org.opentubex.OpenTubeX.desktop -t /app/share/applications/
       - install -Dm644 org.opentubex.OpenTubeX.metainfo.xml -t /app/share/metainfo/

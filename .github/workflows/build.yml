@@ -188,11 +188,17 @@ jobs:
           path: org.opentubex.OpenTubeX-${{ matrix.arch }}.flatpak
           if-no-files-found: error
 
+      - name: Archive build directory
+        run: |
+          set -euo pipefail
+          mv flatpak_app "build-dir-${{ matrix.arch }}"
+          tar -cpf "build-dir-${{ matrix.arch }}.tar" "build-dir-${{ matrix.arch }}"
+
       - name: Upload build directory
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: build-dir-${{ matrix.arch }}
-          path: flatpak_app
+          path: build-dir-${{ matrix.arch }}.tar
           if-no-files-found: error
 
   release:
@@ -294,6 +300,12 @@ jobs:
         with:
           name: build-dir-aarch64
           path: build-dir-aarch64
+
+      - name: Extract build directories
+        run: |
+          set -euo pipefail
+          tar -xpf build-dir-x86_64/build-dir-x86_64.tar
+          tar -xpf build-dir-aarch64/build-dir-aarch64.tar
 
       - name: Import Flatpak signing key
         env:
