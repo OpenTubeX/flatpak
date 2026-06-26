@@ -63,9 +63,14 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          gh release download "${{ steps.release.outputs.tag }}" \
+          version="${{ steps.release.outputs.version }}"
+          tag="${{ steps.release.outputs.tag }}"
+          gh release download "$tag" \
             --repo OpenTubeX/OpenTubeX \
-            --pattern "opentubex-${{ steps.release.outputs.version }}-beta-linux-*-portable.zip"
+            --pattern "opentubex-${version}-beta-linux-x64-portable.zip"
+          gh release download "$tag" \
+            --repo OpenTubeX/OpenTubeX \
+            --pattern "opentubex-${version}-beta-linux-arm64-portable.zip"
 
       - name: Update manifest checksums
         env:
@@ -83,6 +88,15 @@ jobs:
             .modules[0].sources[1].url = \"https://github.com/OpenTubeX/OpenTubeX/releases/download/${TAG}/opentubex-${VERSION}-beta-linux-arm64-portable.zip\" |
             .modules[0].sources[1].sha256 = \"${sha256_arm64}\"
           " org.opentubex.OpenTubeX.yml
+
+      - name: Remove downloaded archives
+        env:
+          VERSION: ${{ steps.release.outputs.version }}
+        run: |
+          set -euo pipefail
+          rm -f \
+            "opentubex-${VERSION}-beta-linux-x64-portable.zip" \
+            "opentubex-${VERSION}-beta-linux-arm64-portable.zip"
 
       - name: Update AppStream release entry
         env:
@@ -111,6 +125,9 @@ jobs:
           commit_message: Update manifest for ${{ steps.release.outputs.tag }}
           commit_options: '--no-verify'
           skip_dirty_check: true
+          file_pattern: |
+            org.opentubex.OpenTubeX.yml
+            org.opentubex.OpenTubeX.metainfo.xml
 
       - name: Upload prepared manifest
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
