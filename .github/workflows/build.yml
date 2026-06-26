@@ -125,6 +125,7 @@ jobs:
           commit_message: Update manifest for ${{ steps.release.outputs.tag }}
           commit_options: '--no-verify'
           skip_dirty_check: true
+          skip_commit_if_empty: true
           file_pattern: |
             org.opentubex.OpenTubeX.yml
             org.opentubex.OpenTubeX.metainfo.xml
