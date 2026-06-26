@@ -314,7 +314,7 @@ jobs:
             site/repo build-dir-x86_64 stable
           flatpak build-export --gpg-sign="$FLATPAK_GPG_FINGERPRINT" --arch=aarch64 \
             site/repo build-dir-aarch64 stable
-          flatpak update-repo --gpg-sign="$FLATPAK_GPG_FINGERPRINT" site/repo
+          flatpak build-update-repo --gpg-sign="$FLATPAK_GPG_FINGERPRINT" site/repo
 
       - name: Assemble GitHub Pages site
         run: |
