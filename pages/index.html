@@ -60,20 +60,14 @@
       line-height: 1.5;
     }
     code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
-    .note {
-      border-left: 3px solid var(--accent);
-      padding-left: 1rem;
-      margin: 1.5rem 0;
-    }
   </style>
 </head>
 <body>
   <main>
     <h1>OpenTubeX Flatpak</h1>
     <p>
-      Unofficial Flatpak builds of
+      Flatpak packages for
       <a href="https://opentubex.org/">OpenTubeX</a>.
-      This repository is not published on Flathub.
     </p>
 
     <h2>Install</h2>
@@ -92,18 +86,13 @@ flatpak install --user opentubex org.opentubex.OpenTubeX</code></pre>
 
     <h2>Offline bundles</h2>
     <p>
-      Prefer a one-file install? Download <code>.flatpak</code> bundles from
+      You can also download <code>.flatpak</code> bundle files from
       <a href="https://github.com/OpenTubeX/flatpak/releases">GitHub Releases</a>
       and run <code>flatpak install --user ./org.opentubex.OpenTubeX-*.flatpak</code>.
+      Bundle installs are not tied to this remote, so they do not receive
+      <code>flatpak update</code> or updates through your software store
+      (for example Discover on KDE).
     </p>
-
-    <div class="note">
-      <p>
-        <strong>Note:</strong> These builds are community-maintained and not reviewed by Flathub.
-        Source and issue tracker:
-        <a href="https://github.com/OpenTubeX/OpenTubeX">OpenTubeX/OpenTubeX</a>.
-      </p>
-    </div>
   </main>
 </body>
 </html>
