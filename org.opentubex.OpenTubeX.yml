@@ -1,0 +1,69 @@
+app-id: org.opentubex.OpenTubeX
+runtime: org.freedesktop.Platform
+runtime-version: '25.08'
+sdk: org.freedesktop.Sdk
+base: org.electronjs.Electron2.BaseApp
+base-version: '25.08'
+command: run.sh
+separate-locales: false
+finish-args:
+  - --device=dri
+  - --share=ipc
+  - --socket=wayland
+  - --socket=fallback-x11
+  - --socket=pulseaudio
+  - --share=network
+  - --own-name=org.mpris.MediaPlayer2.chromium.*
+  - --own-name=org.mpris.MediaPlayer2.opentubex
+  - --talk-name=org.freedesktop.PowerManagement
+  - --talk-name=org.freedesktop.ScreenSaver
+  - --talk-name=org.gnome.SessionManager
+  - --talk-name=org.gnome.SettingsDaemon
+modules:
+  - name: opentubex
+    buildsystem: simple
+    sources:
+      - type: file
+        only-arches:
+          - x86_64
+        url: https://github.com/OpenTubeX/OpenTubeX/releases/download/v0.25.5-beta/opentubex-0.25.5-beta-linux-x64-portable.zip
+        sha256: 70470dcd5ea013558547f30d75ae7f21b25e5d04591fe5020904625f8d56966b
+        x-checker-data:
+          is-main-source: true
+          type: json
+          url: https://api.github.com/repos/OpenTubeX/OpenTubeX/releases?per_page=1
+          version-query: .[0].tag_name
+          url-query: .[0].assets[] | select(.name | endswith("-linux-x64-portable.zip"))
+            | .browser_download_url
+          timestamp-query: .[0].published_at
+          release-url-template: https://github.com/OpenTubeX/OpenTubeX/releases/tag/$version
+      - type: file
+        only-arches:
+          - aarch64
+        url: https://github.com/OpenTubeX/OpenTubeX/releases/download/v0.25.5-beta/opentubex-0.25.5-beta-linux-arm64-portable.zip
+        sha256: 798328ee91892dc96752893ca99c8efb6059bfccb8858188eb89148eeff47439
+        x-checker-data:
+          is-main-source: true
+          type: json
+          url: https://api.github.com/repos/OpenTubeX/OpenTubeX/releases?per_page=1
+          version-query: .[0].tag_name
+          url-query: .[0].assets[] | select(.name | endswith("-linux-arm64-portable.zip"))
+            | .browser_download_url
+          timestamp-query: .[0].published_at
+          release-url-template: https://github.com/OpenTubeX/OpenTubeX/releases/tag/$version
+      - type: file
+        url: https://raw.githubusercontent.com/OpenTubeX/OpenTubeX/development/_icons/icon.svg
+        sha256: e1b049358231e105b2b04458ffbc08613674284d7be86a4b00b88cfe46384cb7
+      - type: file
+        path: run.sh
+      - type: file
+        path: org.opentubex.OpenTubeX.desktop
+      - type: file
+        path: org.opentubex.OpenTubeX.metainfo.xml
+    build-commands:
+      - unzip opentubex-*.zip -d /app/opentubex
+      - install run.sh /app/bin/
+      - install -Dm644 icon.svg /app/share/icons/hicolor/scalable/apps/org.opentubex.OpenTubeX.svg
+      - install -Dm644 org.opentubex.OpenTubeX.desktop -t /app/share/applications/
+      - install -Dm644 org.opentubex.OpenTubeX.metainfo.xml -t /app/share/metainfo/
+      - patch-electron-desktop-filename "${FLATPAK_DEST}"/opentubex/resources/app.asar

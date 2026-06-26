@@ -1,0 +1,220 @@
+name: Build and Release Flatpak
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'OpenTubeX release tag (e.g. v0.25.5-beta). Leave empty for latest.'
+        required: false
+        type: string
+  repository_dispatch:
+    types: [opentubex-release]
+
+permissions: {}
+
+jobs:
+  prepare:
+    name: Prepare manifest
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    outputs:
+      tag: ${{ steps.release.outputs.tag }}
+      version: ${{ steps.release.outputs.version }}
+      published_at: ${{ steps.release.outputs.published_at }}
+
+    steps:
+      - name: Check out flatpak manifest
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Resolve OpenTubeX release
+        id: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          INPUT_TAG: ${{ github.event.inputs.tag || github.event.client_payload.tag || '' }}
+        run: |
+          set -euo pipefail
+
+          if [ -n "$INPUT_TAG" ]; then
+            tag="$INPUT_TAG"
+          else
+            tag="$(gh api repos/OpenTubeX/OpenTubeX/releases/latest --jq .tag_name)"
+          fi
+
+          version="${tag#v}"
+          version="${version%-beta}"
+          published_at="$(gh api "repos/OpenTubeX/OpenTubeX/releases/tags/${tag}" --jq .published_at | cut -dT -f1)"
+
+          {
+            echo "tag=${tag}"
+            echo "version=${version}"
+            echo "published_at=${published_at}"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Install yq
+        run: |
+          sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/download/v4.53.3/yq_linux_amd64
+          sudo chmod +x /usr/local/bin/yq
+
+      - name: Download portable archives
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh release download "${{ steps.release.outputs.tag }}" \
+            --repo OpenTubeX/OpenTubeX \
+            --pattern "opentubex-${{ steps.release.outputs.version }}-beta-linux-*-portable.zip"
+
+      - name: Update manifest checksums
+        env:
+          TAG: ${{ steps.release.outputs.tag }}
+          VERSION: ${{ steps.release.outputs.version }}
+        run: |
+          set -euo pipefail
+
+          sha256_x64="$(sha256sum "opentubex-${VERSION}-beta-linux-x64-portable.zip" | awk '{print $1}')"
+          sha256_arm64="$(sha256sum "opentubex-${VERSION}-beta-linux-arm64-portable.zip" | awk '{print $1}')"
+
+          yq -i \
+            ".modules[0].sources[0].url = \"https://github.com/OpenTubeX/OpenTubeX/releases/download/${TAG}/opentubex-${VERSION}-beta-linux-x64-portable.zip\"" \
+            ".modules[0].sources[0].sha256 = \"${sha256_x64}\"" \
+            ".modules[0].sources[1].url = \"https://github.com/OpenTubeX/OpenTubeX/releases/download/${TAG}/opentubex-${VERSION}-beta-linux-arm64-portable.zip\"" \
+            ".modules[0].sources[1].sha256 = \"${sha256_arm64}\"" \
+            org.opentubex.OpenTubeX.yml
+
+      - name: Update AppStream release entry
+        env:
+          VERSION: ${{ steps.release.outputs.version }}
+          PUBLISHED_AT: ${{ steps.release.outputs.published_at }}
+          TAG: ${{ steps.release.outputs.tag }}
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq xmlstarlet
+
+          xmlstarlet ed -L \
+            -d "/component/releases/release[1]" \
+            -s "/component/releases" -t elem -n release -v "" \
+            -i "/component/releases/release[1]" -t attr -n version -v "${VERSION}-beta" \
+            -i "/component/releases/release[1]" -t attr -n date -v "${PUBLISHED_AT}" \
+            -s "/component/releases/release[1]" -t elem -n url -v "" \
+            -i "/component/releases/release[1]/url" -t attr -n type -v details \
+            -s "/component/releases/release[1]/url" -t text -n "" \
+              -v "https://github.com/OpenTubeX/OpenTubeX/releases/tag/${TAG}" \
+            org.opentubex.OpenTubeX.metainfo.xml
+
+      - name: Commit manifest updates
+        uses: stefanzweifel/git-auto-commit-action@04702edda442b2e678b25b537cec683a1493fcb9 # v7.1.0
+        with:
+          commit_message: Update manifest for ${{ steps.release.outputs.tag }}
+          commit_options: '--no-verify'
+          skip_dirty_check: true
+
+      - name: Upload prepared manifest
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: manifest
+          path: |
+            org.opentubex.OpenTubeX.yml
+            org.opentubex.OpenTubeX.desktop
+            org.opentubex.OpenTubeX.metainfo.xml
+            run.sh
+
+  build:
+    name: Build ${{ matrix.arch }}
+    needs: prepare
+    runs-on: ${{ matrix.runner }}
+    container:
+      image: ghcr.io/flathub-infra/flatpak-github-actions:freedesktop-25.08
+      options: --privileged
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x86_64
+            runner: ubuntu-latest
+          - arch: aarch64
+            runner: ubuntu-24.04-arm
+
+    steps:
+      - name: Download prepared manifest
+        uses: actions/download-artifact@d3f86a106a0bac45b446a9aebfe4550f9b8a0477 # v4.3.0
+        with:
+          name: manifest
+          path: .
+
+      - name: Build Flatpak bundle
+        uses: flatpak/flatpak-github-actions/flatpak-builder@v6
+        with:
+          arch: ${{ matrix.arch }}
+          bundle: org.opentubex.OpenTubeX-${{ matrix.arch }}.flatpak
+          manifest-path: org.opentubex.OpenTubeX.yml
+          upload-artifact: false
+          cache-key: flatpak-builder-${{ matrix.arch }}-${{ needs.prepare.outputs.tag }}
+
+      - name: Upload Flatpak bundle
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: flatpak-${{ matrix.arch }}
+          path: org.opentubex.OpenTubeX-${{ matrix.arch }}.flatpak
+          if-no-files-found: error
+
+  release:
+    name: Publish GitHub release
+    needs: [prepare, build]
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download Flatpak bundles
+        uses: actions/download-artifact@d3f86a106a0bac45b446a9aebfe4550f9b8a0477 # v4.3.0
+        with:
+          pattern: flatpak-*
+          merge-multiple: true
+
+      - name: Rename bundles for release
+        env:
+          TAG: ${{ needs.prepare.outputs.tag }}
+        run: |
+          set -euo pipefail
+          mv org.opentubex.OpenTubeX-x86_64.flatpak \
+            "org.opentubex.OpenTubeX-${TAG}-x86_64.flatpak"
+          mv org.opentubex.OpenTubeX-aarch64.flatpak \
+            "org.opentubex.OpenTubeX-${TAG}-aarch64.flatpak"
+
+      - name: Create or update GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ needs.prepare.outputs.tag }}
+          VERSION: ${{ needs.prepare.outputs.version }}
+        run: |
+          set -euo pipefail
+
+          notes="Flatpak bundles for OpenTubeX ${TAG}.
+
+          Install with:
+          \`\`\`bash
+          flatpak install --user ./org.opentubex.OpenTubeX-${TAG}-x86_64.flatpak
+          # or for ARM64:
+          flatpak install --user ./org.opentubex.OpenTubeX-${TAG}-aarch64.flatpak
+          \`\`\`
+
+          Built from [OpenTubeX/OpenTubeX ${TAG}](https://github.com/OpenTubeX/OpenTubeX/releases/tag/${TAG})."
+
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" \
+              "org.opentubex.OpenTubeX-${TAG}-x86_64.flatpak" \
+              "org.opentubex.OpenTubeX-${TAG}-aarch64.flatpak" \
+              --clobber
+          else
+            gh release create "$TAG" \
+              "org.opentubex.OpenTubeX-${TAG}-x86_64.flatpak" \
+              "org.opentubex.OpenTubeX-${TAG}-aarch64.flatpak" \
+              --title "OpenTubeX ${VERSION} Beta (Flatpak)" \
+              --notes "$notes"
+          fi

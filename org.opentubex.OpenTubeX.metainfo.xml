@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>org.opentubex.OpenTubeX</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <name>OpenTubeX</name>
+  <summary>A private YouTube client</summary>
+  <description>
+    <p>OpenTubeX is an open source desktop YouTube player built with privacy in
+    mind. Use YouTube without advertisements and prevent Google from tracking
+    you with their cookies and JavaScript. Available for Windows, Mac &amp;
+    Linux thanks to Electron.</p>
+    <p>Please note that OpenTubeX is currently in Beta. While it should work well
+    for most users, there are still bugs and missing features that need to be
+    addressed.</p>
+  </description>
+  <launchable type="desktop-id">org.opentubex.OpenTubeX.desktop</launchable>
+  <categories>
+    <category>AudioVideo</category>
+    <category>Video</category>
+    <category>Network</category>
+  </categories>
+  <url type="homepage">https://opentubex.org/</url>
+  <url type="bugtracker">https://github.com/OpenTubeX/OpenTubeX/issues</url>
+  <url type="vcs-browser">https://github.com/OpenTubeX/OpenTubeX</url>
+  <url type="translate">https://weblate.d3sox.me/engage/opentubex/</url>
+  <project_license>AGPL-3.0-or-later</project_license>
+  <developer_name>OpenTubeX contributors</developer_name>
+  <screenshots>
+    <screenshot type="default">
+      <caption>The main OpenTubeX window</caption>
+      <image type="source" width="1920" height="1040">https://raw.githubusercontent.com/FreeTubeApp/FreeTubeApp.io/master/src/images/FreeTube1.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Watching a video</caption>
+      <image type="source" width="1920" height="1040">https://raw.githubusercontent.com/FreeTubeApp/FreeTubeApp.io/master/src/images/FreeTube2.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Settings</caption>
+      <image type="source" width="1920" height="1040">https://raw.githubusercontent.com/FreeTubeApp/FreeTubeApp.io/master/src/images/FreeTube3.png</image>
+    </screenshot>
+  </screenshots>
+  <content_rating type="oars-1.0">
+    <content_attribute id="social-chat">moderate</content_attribute>
+    <content_attribute id="social-audio">moderate</content_attribute>
+    <content_attribute id="social-contacts">intense</content_attribute>
+  </content_rating>
+  <supports>
+    <control>keyboard</control>
+    <control>pointing</control>
+    <control>touch</control>
+  </supports>
+  <requires>
+    <display_length compare="ge">360</display_length>
+  </requires>
+  <releases>
+    <release version="0.25.5-beta" date="2026-06-21">
+      <url type="details">https://github.com/OpenTubeX/OpenTubeX/releases/tag/v0.25.5-beta</url>
+    </release>
+  </releases>
+</component>

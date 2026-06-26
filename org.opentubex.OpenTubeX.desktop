@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=OpenTubeX
+Comment=A private YouTube client
+GenericName=OpenTubeX
+Exec=/app/bin/run.sh %u
+Icon=org.opentubex.OpenTubeX
+Type=Application
+StartupNotify=true
+StartupWMClass=opentubex
+Categories=GNOME;GTK;AudioVideo;Network;Utility;
+MimeType=x-scheme-handler/opentubex;
