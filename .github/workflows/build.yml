@@ -230,16 +230,14 @@ jobs:
         run: |
           set -euo pipefail
 
-          notes="Flatpak bundles for OpenTubeX ${TAG}.
+          notes="Flatpak bundles for [OpenTubeX ${TAG}](https://github.com/OpenTubeX/OpenTubeX/releases/tag/${TAG}).
 
           Install with:
           \`\`\`bash
           flatpak install --user ./org.opentubex.OpenTubeX-${TAG}-x86_64.flatpak
           # or for ARM64:
           flatpak install --user ./org.opentubex.OpenTubeX-${TAG}-aarch64.flatpak
-          \`\`\`
-
-          Built from [OpenTubeX/OpenTubeX ${TAG}](https://github.com/OpenTubeX/OpenTubeX/releases/tag/${TAG})."
+          \`\`\`"
 
           if gh release view "$TAG" --repo "$GH_REPO" >/dev/null 2>&1; then
             gh release upload "$TAG" \
