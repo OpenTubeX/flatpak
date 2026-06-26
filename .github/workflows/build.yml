@@ -77,12 +77,12 @@ jobs:
           sha256_x64="$(sha256sum "opentubex-${VERSION}-beta-linux-x64-portable.zip" | awk '{print $1}')"
           sha256_arm64="$(sha256sum "opentubex-${VERSION}-beta-linux-arm64-portable.zip" | awk '{print $1}')"
 
-          yq -i \
-            ".modules[0].sources[0].url = \"https://github.com/OpenTubeX/OpenTubeX/releases/download/${TAG}/opentubex-${VERSION}-beta-linux-x64-portable.zip\"" \
-            ".modules[0].sources[0].sha256 = \"${sha256_x64}\"" \
-            ".modules[0].sources[1].url = \"https://github.com/OpenTubeX/OpenTubeX/releases/download/${TAG}/opentubex-${VERSION}-beta-linux-arm64-portable.zip\"" \
-            ".modules[0].sources[1].sha256 = \"${sha256_arm64}\"" \
-            org.opentubex.OpenTubeX.yml
+          yq -i "
+            .modules[0].sources[0].url = \"https://github.com/OpenTubeX/OpenTubeX/releases/download/${TAG}/opentubex-${VERSION}-beta-linux-x64-portable.zip\" |
+            .modules[0].sources[0].sha256 = \"${sha256_x64}\" |
+            .modules[0].sources[1].url = \"https://github.com/OpenTubeX/OpenTubeX/releases/download/${TAG}/opentubex-${VERSION}-beta-linux-arm64-portable.zip\" |
+            .modules[0].sources[1].sha256 = \"${sha256_arm64}\"
+          " org.opentubex.OpenTubeX.yml
 
       - name: Update AppStream release entry
         env:
