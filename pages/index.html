@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>OpenTubeX Flatpak</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --text: #1a1a1a;
+      --muted: #555;
+      --bg: #fafafa;
+      --card: #fff;
+      --border: #ddd;
+      --code-bg: #f4f4f4;
+      --accent: #c4302b;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --text: #eee;
+        --muted: #aaa;
+        --bg: #111;
+        --card: #1a1a1a;
+        --border: #333;
+        --code-bg: #222;
+        --accent: #ff6b6b;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      line-height: 1.6;
+      color: var(--text);
+      background: var(--bg);
+    }
+    main {
+      max-width: 42rem;
+      margin: 0 auto;
+      padding: 2rem 1.25rem 3rem;
+    }
+    h1 { font-size: 1.75rem; margin-top: 0; }
+    h2 { font-size: 1.1rem; margin-top: 2rem; }
+    p, li { color: var(--muted); }
+    a { color: var(--accent); }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+      margin: 1rem 0;
+    }
+    pre {
+      margin: 0;
+      padding: 1rem;
+      overflow-x: auto;
+      background: var(--code-bg);
+      border-radius: 6px;
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+    code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+    .note {
+      border-left: 3px solid var(--accent);
+      padding-left: 1rem;
+      margin: 1.5rem 0;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>OpenTubeX Flatpak</h1>
+    <p>
+      Unofficial Flatpak builds of
+      <a href="https://opentubex.org/">OpenTubeX</a>.
+      This repository is not published on Flathub.
+    </p>
+
+    <h2>Install</h2>
+    <p>Add the remote once (<code>--no-gpg-verify</code> is required because this repo is unsigned):</p>
+    <div class="card">
+      <pre><code>flatpak remote-add --user --if-not-exists opentubex \
+  https://flatpak.opentubex.org/opentubex.flatpakrepo \
+  --no-gpg-verify
+
+flatpak install --user opentubex org.opentubex.OpenTubeX</code></pre>
+    </div>
+
+    <h2>Update</h2>
+    <div class="card">
+      <pre><code>flatpak update --user org.opentubex.OpenTubeX</code></pre>
+    </div>
+
+    <h2>Offline bundles</h2>
+    <p>
+      Prefer a one-file install? Download <code>.flatpak</code> bundles from
+      <a href="https://github.com/OpenTubeX/flatpak/releases">GitHub Releases</a>
+      and run <code>flatpak install --user ./org.opentubex.OpenTubeX-*.flatpak</code>.
+    </p>
+
+    <div class="note">
+      <p>
+        <strong>Note:</strong> These builds are community-maintained and not reviewed by Flathub.
+        Source and issue tracker:
+        <a href="https://github.com/OpenTubeX/OpenTubeX">OpenTubeX/OpenTubeX</a>.
+      </p>
+    </div>
+  </main>
+</body>
+</html>

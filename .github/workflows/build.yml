@@ -178,6 +178,7 @@ jobs:
           bundle: org.opentubex.OpenTubeX-${{ matrix.arch }}.flatpak
           manifest-path: org.opentubex.OpenTubeX.yml
           upload-artifact: false
+          keep-build-dirs: true
           cache-key: flatpak-builder-${{ matrix.arch }}-${{ needs.prepare.outputs.tag }}
 
       - name: Upload Flatpak bundle
@@ -185,6 +186,13 @@ jobs:
         with:
           name: flatpak-${{ matrix.arch }}
           path: org.opentubex.OpenTubeX-${{ matrix.arch }}.flatpak
+          if-no-files-found: error
+
+      - name: Upload build directory
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: build-dir-${{ matrix.arch }}
+          path: flatpak_app
           if-no-files-found: error
 
   release:
@@ -247,3 +255,65 @@ jobs:
               --title "OpenTubeX ${VERSION} Beta (Flatpak)" \
               --notes "$notes"
           fi
+
+  publish-repo:
+    name: Publish OSTree remote
+    needs: [prepare, build]
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/flathub-infra/flatpak-github-actions:freedesktop-25.08
+      options: --privileged
+
+    permissions:
+      contents: write
+      actions: read
+      pages: write
+      id-token: write
+
+    steps:
+      - name: Check out flatpak manifest
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+
+      - name: Restore OSTree repo from gh-pages
+        run: |
+          set -euo pipefail
+          mkdir -p site/repo
+          if git fetch origin gh-pages:gh-pages 2>/dev/null \
+            && git show gh-pages:repo/config >/dev/null 2>&1; then
+            git archive gh-pages repo | tar -x -C site
+          fi
+
+      - name: Download x86_64 build directory
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: build-dir-x86_64
+          path: build-dir-x86_64
+
+      - name: Download aarch64 build directory
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: build-dir-aarch64
+          path: build-dir-aarch64
+
+      - name: Export builds into OSTree repo
+        run: |
+          set -euo pipefail
+          flatpak build-export --arch=x86_64 site/repo build-dir-x86_64 \
+            org.opentubex.OpenTubeX stable
+          flatpak build-export --arch=aarch64 site/repo build-dir-aarch64 \
+            org.opentubex.OpenTubeX stable
+          flatpak update-repo site/repo
+
+      - name: Assemble GitHub Pages site
+        run: |
+          set -euo pipefail
+          cp pages/CNAME pages/opentubex.flatpakrepo pages/index.html site/
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@4f9cc6602d3f66ae9a78674e0034724da90bc2d8 # v4.0.0
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./site
+          cname: flatpak.opentubex.org

@@ -1,0 +1,7 @@
+[Flatpak Repo]
+Version=1
+Title=OpenTubeX
+Homepage=https://opentubex.org/
+Description=Unofficial OpenTubeX Flatpak builds
+Url=https://flatpak.opentubex.org/repo
+DefaultBranch=stable

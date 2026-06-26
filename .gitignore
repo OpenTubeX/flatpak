@@ -1,5 +1,6 @@
 /.flatpak-builder/
 /build-dir/
 /repo/
+/site/
 *.flatpak
 opentubex-*-portable.zip
