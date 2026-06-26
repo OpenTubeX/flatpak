@@ -297,14 +297,24 @@ jobs:
           name: build-dir-aarch64
           path: build-dir-aarch64
 
-      - name: Export builds into OSTree repo
+      - name: Import Flatpak signing key
+        env:
+          FLATPAK_GPG_PRIVATE_KEY: ${{ secrets.FLATPAK_GPG_PRIVATE_KEY }}
         run: |
           set -euo pipefail
-          flatpak build-export --arch=x86_64 site/repo build-dir-x86_64 \
-            org.opentubex.OpenTubeX stable
-          flatpak build-export --arch=aarch64 site/repo build-dir-aarch64 \
-            org.opentubex.OpenTubeX stable
-          flatpak update-repo site/repo
+          echo "$FLATPAK_GPG_PRIVATE_KEY" | gpg --batch --import
+          gpg --list-secret-keys --with-fingerprint flatpak@opentubex.org
+
+      - name: Export builds into OSTree repo
+        env:
+          FLATPAK_GPG_FINGERPRINT: FCB58AF1F41F6E3157A6496438960E78A4EE5B9C
+        run: |
+          set -euo pipefail
+          flatpak build-export --gpg-sign="$FLATPAK_GPG_FINGERPRINT" --arch=x86_64 \
+            site/repo build-dir-x86_64 org.opentubex.OpenTubeX stable
+          flatpak build-export --gpg-sign="$FLATPAK_GPG_FINGERPRINT" --arch=aarch64 \
+            site/repo build-dir-aarch64 org.opentubex.OpenTubeX stable
+          flatpak update-repo --gpg-sign="$FLATPAK_GPG_FINGERPRINT" site/repo
 
       - name: Assemble GitHub Pages site
         run: |

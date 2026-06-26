@@ -4,3 +4,4 @@
 /site/
 *.flatpak
 opentubex-*-portable.zip
+.gpg-*.tmp
