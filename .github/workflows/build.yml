@@ -120,15 +120,19 @@ jobs:
             org.opentubex.OpenTubeX.metainfo.xml
 
       - name: Commit manifest updates
-        uses: stefanzweifel/git-auto-commit-action@04702edda442b2e678b25b537cec683a1493fcb9 # v7.1.0
-        with:
-          commit_message: Update manifest for ${{ steps.release.outputs.tag }}
-          commit_options: '--no-verify'
-          skip_dirty_check: true
-          skip_commit_if_empty: true
-          file_pattern: |
-            org.opentubex.OpenTubeX.yml
-            org.opentubex.OpenTubeX.metainfo.xml
+        env:
+          TAG: ${{ steps.release.outputs.tag }}
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add org.opentubex.OpenTubeX.yml org.opentubex.OpenTubeX.metainfo.xml
+          if git diff --cached --quiet; then
+            echo "Manifest already up to date for ${TAG}, skipping commit."
+          else
+            git commit --no-verify -m "Update manifest for ${TAG}"
+            git push
+          fi
 
       - name: Upload prepared manifest
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
