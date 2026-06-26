@@ -147,6 +147,9 @@ jobs:
       image: ghcr.io/flathub-infra/flatpak-github-actions:freedesktop-25.08
       options: --privileged
 
+    permissions:
+      actions: read
+
     strategy:
       fail-fast: false
       matrix:
@@ -158,7 +161,7 @@ jobs:
 
     steps:
       - name: Download prepared manifest
-        uses: actions/download-artifact@d3f86a106a0bac45b446a9aebfe4550f9b8a0477 # v4.3.0
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: manifest
           path: .
@@ -186,10 +189,11 @@ jobs:
 
     permissions:
       contents: write
+      actions: read
 
     steps:
       - name: Download Flatpak bundles
-        uses: actions/download-artifact@d3f86a106a0bac45b446a9aebfe4550f9b8a0477 # v4.3.0
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           pattern: flatpak-*
           merge-multiple: true
