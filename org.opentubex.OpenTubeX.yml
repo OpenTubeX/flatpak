@@ -26,8 +26,8 @@ modules:
       - type: file
         only-arches:
           - x86_64
-        url: https://github.com/OpenTubeX/OpenTubeX/releases/download/v0.25.5-beta/opentubex-0.25.5-beta-linux-x64-portable.zip
-        sha256: 70470dcd5ea013558547f30d75ae7f21b25e5d04591fe5020904625f8d56966b
+        url: https://github.com/OpenTubeX/OpenTubeX/releases/download/v0.25.6-beta/opentubex-0.25.6-beta-linux-x64-portable.zip
+        sha256: d1a794a1194912f7def2ef3a6b86019921c62ab45380573f5105d62c3c9a1707
         x-checker-data:
           is-main-source: true
           type: json
@@ -39,8 +39,8 @@ modules:
       - type: file
         only-arches:
           - aarch64
-        url: https://github.com/OpenTubeX/OpenTubeX/releases/download/v0.25.5-beta/opentubex-0.25.5-beta-linux-arm64-portable.zip
-        sha256: 798328ee91892dc96752893ca99c8efb6059bfccb8858188eb89148eeff47439
+        url: https://github.com/OpenTubeX/OpenTubeX/releases/download/v0.25.6-beta/opentubex-0.25.6-beta-linux-arm64-portable.zip
+        sha256: 33a2587c28418b20b0fd4a1f4bac64ade408303a57238df5fdb4516d6684633e
         x-checker-data:
           is-main-source: true
           type: json
