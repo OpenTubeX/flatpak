@@ -53,8 +53,8 @@
     <display_length compare="ge">360</display_length>
   </requires>
   <releases>
-    <release version="0.27.0-beta" date="2026-07-14">
-      <url type="details">https://github.com/OpenTubeX/OpenTubeX/releases/tag/v0.27.0-beta</url>
+    <release version="0.28.0-beta" date="2026-07-15">
+      <url type="details">https://github.com/OpenTubeX/OpenTubeX/releases/tag/v0.28.0-beta</url>
     </release>
   </releases>
 </component>
