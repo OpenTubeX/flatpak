@@ -1,6 +1,7 @@
 [Desktop Entry]
 Name=OpenTubeX
 Comment=A private YouTube client
+Comment[de]=Ein privater YouTube-Client
 GenericName=OpenTubeX
 Exec=/app/bin/run.sh %u
 Icon=org.opentubex.OpenTubeX
