@@ -8,7 +8,7 @@ on:
         required: false
         type: string
   repository_dispatch:
-    types: [opentubex-release]
+    types: [opentubex-release, opentubex-nightly]
 
 permissions: {}
 
@@ -23,6 +23,8 @@ jobs:
     outputs:
       tag: ${{ steps.release.outputs.tag }}
       version: ${{ steps.release.outputs.version }}
+      asset_version: ${{ steps.release.outputs.asset_version }}
+      channel: ${{ steps.release.outputs.channel }}
       published_at: ${{ steps.release.outputs.published_at }}
 
     steps:
@@ -43,13 +45,25 @@ jobs:
             tag="$(gh api repos/OpenTubeX/OpenTubeX/releases/latest --jq .tag_name)"
           fi
 
-          version="${tag#v}"
-          version="${version%-beta}"
+          if [[ "$tag" =~ ^v([0-9]+\.[0-9]+\.[0-9]+)-beta$ ]]; then
+            version="${BASH_REMATCH[1]}"
+            asset_version="${version}-beta"
+            channel=stable
+          elif [[ "$tag" =~ ^v([0-9]+\.[0-9]+\.[0-9]+-nightly-[0-9]+)$ ]]; then
+            version="${BASH_REMATCH[1]}"
+            asset_version="$version"
+            channel=nightly
+          else
+            echo "Expected a stable or nightly OpenTubeX tag, got: $tag" >&2
+            exit 1
+          fi
           published_at="$(gh api "repos/OpenTubeX/OpenTubeX/releases/tags/${tag}" --jq .published_at | cut -dT -f1)"
 
           {
             echo "tag=${tag}"
             echo "version=${version}"
+            echo "asset_version=${asset_version}"
+            echo "channel=${channel}"
             echo "published_at=${published_at}"
           } >> "$GITHUB_OUTPUT"
 
@@ -63,44 +77,45 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          version="${{ steps.release.outputs.version }}"
+          asset_version="${{ steps.release.outputs.asset_version }}"
           tag="${{ steps.release.outputs.tag }}"
           gh release download "$tag" \
             --repo OpenTubeX/OpenTubeX \
-            --pattern "opentubex-${version}-beta-linux-x64-portable.zip"
+            --pattern "opentubex-${asset_version}-linux-x64-portable.zip"
           gh release download "$tag" \
             --repo OpenTubeX/OpenTubeX \
-            --pattern "opentubex-${version}-beta-linux-arm64-portable.zip"
+            --pattern "opentubex-${asset_version}-linux-arm64-portable.zip"
 
       - name: Update manifest checksums
         env:
           TAG: ${{ steps.release.outputs.tag }}
-          VERSION: ${{ steps.release.outputs.version }}
+          ASSET_VERSION: ${{ steps.release.outputs.asset_version }}
         run: |
           set -euo pipefail
 
-          sha256_x64="$(sha256sum "opentubex-${VERSION}-beta-linux-x64-portable.zip" | awk '{print $1}')"
-          sha256_arm64="$(sha256sum "opentubex-${VERSION}-beta-linux-arm64-portable.zip" | awk '{print $1}')"
+          sha256_x64="$(sha256sum "opentubex-${ASSET_VERSION}-linux-x64-portable.zip" | awk '{print $1}')"
+          sha256_arm64="$(sha256sum "opentubex-${ASSET_VERSION}-linux-arm64-portable.zip" | awk '{print $1}')"
 
           yq -i "
-            .modules[0].sources[0].url = \"https://github.com/OpenTubeX/OpenTubeX/releases/download/${TAG}/opentubex-${VERSION}-beta-linux-x64-portable.zip\" |
+            .modules[0].sources[0].url = \"https://github.com/OpenTubeX/OpenTubeX/releases/download/${TAG}/opentubex-${ASSET_VERSION}-linux-x64-portable.zip\" |
             .modules[0].sources[0].sha256 = \"${sha256_x64}\" |
-            .modules[0].sources[1].url = \"https://github.com/OpenTubeX/OpenTubeX/releases/download/${TAG}/opentubex-${VERSION}-beta-linux-arm64-portable.zip\" |
+            .modules[0].sources[1].url = \"https://github.com/OpenTubeX/OpenTubeX/releases/download/${TAG}/opentubex-${ASSET_VERSION}-linux-arm64-portable.zip\" |
             .modules[0].sources[1].sha256 = \"${sha256_arm64}\"
           " org.opentubex.OpenTubeX.yml
 
       - name: Remove downloaded archives
         env:
-          VERSION: ${{ steps.release.outputs.version }}
+          ASSET_VERSION: ${{ steps.release.outputs.asset_version }}
         run: |
           set -euo pipefail
           rm -f \
-            "opentubex-${VERSION}-beta-linux-x64-portable.zip" \
-            "opentubex-${VERSION}-beta-linux-arm64-portable.zip"
+            "opentubex-${ASSET_VERSION}-linux-x64-portable.zip" \
+            "opentubex-${ASSET_VERSION}-linux-arm64-portable.zip"
 
       - name: Update AppStream release entry
         env:
           VERSION: ${{ steps.release.outputs.version }}
+          CHANNEL: ${{ steps.release.outputs.channel }}
           PUBLISHED_AT: ${{ steps.release.outputs.published_at }}
           TAG: ${{ steps.release.outputs.tag }}
         run: |
@@ -108,10 +123,15 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get install -y -qq xmlstarlet
 
+          appstream_version="$VERSION"
+          if [[ "$CHANNEL" == stable ]]; then
+            appstream_version="${VERSION}-beta"
+          fi
+
           xmlstarlet ed -L \
             -d "/component/releases/release[1]" \
             -s "/component/releases" -t elem -n release -v "" \
-            -i "/component/releases/release[1]" -t attr -n version -v "${VERSION}-beta" \
+            -i "/component/releases/release[1]" -t attr -n version -v "${appstream_version}" \
             -i "/component/releases/release[1]" -t attr -n date -v "${PUBLISHED_AT}" \
             -s "/component/releases/release[1]" -t elem -n url -v "" \
             -i "/component/releases/release[1]/url" -t attr -n type -v details \
@@ -120,6 +140,7 @@ jobs:
             org.opentubex.OpenTubeX.metainfo.xml
 
       - name: Commit manifest updates
+        if: steps.release.outputs.channel == 'stable'
         env:
           TAG: ${{ steps.release.outputs.tag }}
         run: |
@@ -233,6 +254,7 @@ jobs:
           GH_REPO: ${{ github.repository }}
           TAG: ${{ needs.prepare.outputs.tag }}
           VERSION: ${{ needs.prepare.outputs.version }}
+          CHANNEL: ${{ needs.prepare.outputs.channel }}
         run: |
           set -euo pipefail
 
@@ -252,11 +274,16 @@ jobs:
               --repo "$GH_REPO" \
               --clobber
           else
+            release_flags=()
+            if [[ "$CHANNEL" == nightly ]]; then
+              release_flags+=(--prerelease)
+            fi
             gh release create "$TAG" \
               "org.opentubex.OpenTubeX-${TAG}-x86_64.flatpak" \
               "org.opentubex.OpenTubeX-${TAG}-aarch64.flatpak" \
               --repo "$GH_REPO" \
-              --title "OpenTubeX ${VERSION} Beta (Flatpak)" \
+              --title "OpenTubeX ${VERSION} (Flatpak)" \
+              "${release_flags[@]}" \
               --notes "$notes"
           fi
 
@@ -321,9 +348,9 @@ jobs:
         run: |
           set -euo pipefail
           flatpak build-export --gpg-sign="$FLATPAK_GPG_FINGERPRINT" --arch=x86_64 \
-            site/repo build-dir-x86_64 stable
+            site/repo build-dir-x86_64 "${{ needs.prepare.outputs.channel }}"
           flatpak build-export --gpg-sign="$FLATPAK_GPG_FINGERPRINT" --arch=aarch64 \
-            site/repo build-dir-aarch64 stable
+            site/repo build-dir-aarch64 "${{ needs.prepare.outputs.channel }}"
           flatpak build-update-repo --gpg-sign="$FLATPAK_GPG_FINGERPRINT" site/repo
 
       - name: Assemble GitHub Pages site
