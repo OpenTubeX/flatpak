@@ -29,7 +29,7 @@ jobs:
 
     steps:
       - name: Check out flatpak manifest
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Resolve OpenTubeX release
         id: release
@@ -156,7 +156,7 @@ jobs:
           fi
 
       - name: Upload prepared manifest
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: manifest
           path: |
@@ -187,13 +187,13 @@ jobs:
 
     steps:
       - name: Download prepared manifest
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: manifest
           path: .
 
       - name: Build Flatpak bundle
-        uses: flatpak/flatpak-github-actions/flatpak-builder@v6
+        uses: flatpak/flatpak-github-actions/flatpak-builder@401fe28a8384095fc1531b9d320b292f0ee45adb # v6.7
         with:
           arch: ${{ matrix.arch }}
           bundle: org.opentubex.OpenTubeX-${{ matrix.arch }}.flatpak
@@ -203,7 +203,7 @@ jobs:
           cache-key: flatpak-builder-${{ matrix.arch }}-${{ needs.prepare.outputs.tag }}
 
       - name: Upload Flatpak bundle
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: flatpak-${{ matrix.arch }}
           path: org.opentubex.OpenTubeX-${{ matrix.arch }}.flatpak
@@ -216,7 +216,7 @@ jobs:
           tar -cpf "build-dir-${{ matrix.arch }}.tar" "build-dir-${{ matrix.arch }}"
 
       - name: Upload build directory
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: build-dir-${{ matrix.arch }}
           path: build-dir-${{ matrix.arch }}.tar
@@ -233,7 +233,7 @@ jobs:
 
     steps:
       - name: Download Flatpak bundles
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           pattern: flatpak-*
           merge-multiple: true
@@ -303,7 +303,7 @@ jobs:
 
     steps:
       - name: Check out flatpak manifest
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
 
@@ -317,13 +317,13 @@ jobs:
           fi
 
       - name: Download x86_64 build directory
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: build-dir-x86_64
           path: build-dir-x86_64
 
       - name: Download aarch64 build directory
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: build-dir-aarch64
           path: build-dir-aarch64
@@ -360,7 +360,7 @@ jobs:
             pages/index.html pages/style.css pages/favicon.svg pages/favicon.ico site/
 
       - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@1ef5a1b1df4c63fe21a2242edbee6cac921ece01 # v4.1.0
+        uses: peaceiris/actions-gh-pages@84c30a85c19949d7eee79c4ff27748b70285e453 # v4.1.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./site
