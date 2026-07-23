@@ -7,6 +7,7 @@
   <link rel="icon" href="/favicon.ico" sizes="any">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/style.css">
+  <script src="/code-blocks.js" defer></script>
 </head>
 <body>
   <main>
@@ -19,7 +20,7 @@
     <h2>Install</h2>
     <p>Add the remote once:</p>
     <div class="card">
-      <pre><code>flatpak remote-add --if-not-exists opentubex \
+      <pre><code class="language-shell">flatpak remote-add --if-not-exists opentubex \
   https://flatpak.opentubex.org/opentubex.flatpakrepo
 
 flatpak install opentubex org.opentubex.OpenTubeX</code></pre>
@@ -28,12 +29,12 @@ flatpak install opentubex org.opentubex.OpenTubeX</code></pre>
     <h2>Nightly builds</h2>
     <p>Install the opt-in development branch from the same remote:</p>
     <div class="card">
-      <pre><code>flatpak install opentubex org.opentubex.OpenTubeX//nightly</code></pre>
+      <pre><code class="language-shell">flatpak install opentubex org.opentubex.OpenTubeX//nightly</code></pre>
     </div>
 
     <h2>Update</h2>
     <div class="card">
-      <pre><code>flatpak update org.opentubex.OpenTubeX</code></pre>
+      <pre><code class="language-shell">flatpak update org.opentubex.OpenTubeX</code></pre>
     </div>
 
     <h2>Offline bundles</h2>

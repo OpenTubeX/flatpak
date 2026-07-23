@@ -19,6 +19,12 @@
   --code-bg: var(--sl-color-gray-5);
   --link: var(--sl-color-accent-high);
   --link-hover: var(--sl-color-accent);
+  --syntax-command: hsl(187, 72%, 75%);
+  --syntax-option: hsl(267, 84%, 81%);
+  --syntax-string: hsl(115, 54%, 76%);
+  --syntax-number: hsl(23, 92%, 75%);
+  --syntax-operator: hsl(343, 81%, 75%);
+  --syntax-path: hsl(217, 92%, 76%);
 }
 
 @media (prefers-color-scheme: light) {
@@ -43,6 +49,12 @@
     --code-bg: var(--sl-color-gray-6);
     --link: var(--sl-color-accent);
     --link-hover: var(--sl-color-accent-high);
+    --syntax-command: hsl(187, 75%, 28%);
+    --syntax-option: hsl(267, 60%, 42%);
+    --syntax-string: hsl(115, 55%, 29%);
+    --syntax-number: hsl(23, 80%, 38%);
+    --syntax-operator: hsl(343, 70%, 43%);
+    --syntax-path: hsl(217, 70%, 46%);
   }
 }
 
@@ -102,8 +114,9 @@ a:focus-visible {
 }
 
 pre {
+  position: relative;
   margin: 0;
-  padding: 1rem;
+  padding: 1rem 3.5rem 1rem 1rem;
   overflow-x: auto;
   background: var(--code-bg);
   border-radius: 0.5rem;
@@ -114,4 +127,88 @@ pre {
 code {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
     'Courier New', monospace;
+}
+
+.token-command {
+  color: var(--syntax-command);
+}
+
+.token-option {
+  color: var(--syntax-option);
+}
+
+.token-string {
+  color: var(--syntax-string);
+}
+
+.token-number {
+  color: var(--syntax-number);
+}
+
+.token-operator {
+  color: var(--syntax-operator);
+}
+
+.token-path {
+  color: var(--syntax-path);
+}
+
+.copy-button {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  display: grid;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  place-items: center;
+  color: var(--muted);
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 0.4rem;
+  cursor: pointer;
+  opacity: 0;
+  transition: color 0.15s, border-color 0.15s, opacity 0.15s;
+}
+
+pre:hover .copy-button,
+.copy-button:focus-visible,
+.copy-button[data-copied] {
+  opacity: 1;
+}
+
+.copy-button:hover,
+.copy-button:focus-visible {
+  color: var(--text);
+  border-color: var(--muted);
+}
+
+.copy-button svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.copy-button .check-icon,
+.copy-button[data-copied] .copy-icon {
+  display: none;
+}
+
+.copy-button[data-copied] {
+  color: var(--syntax-string);
+}
+
+.copy-button[data-copied] .check-icon {
+  display: block;
+}
+
+@media (hover: none) {
+  .copy-button {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .copy-button {
+    transition: none;
+  }
 }
