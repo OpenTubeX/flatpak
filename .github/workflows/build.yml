@@ -318,12 +318,20 @@ jobs:
           set -euo pipefail
           mkdir -p site
           if git fetch origin gh-pages:refs/remotes/origin/gh-pages; then
-            git restore --source=origin/gh-pages --worktree -- repo
-            mv repo site/repo
+            git worktree add --detach gh-pages-tree origin/gh-pages
+            mv gh-pages-tree/repo site/repo
           else
             mkdir -p site/repo
           fi
           mkdir -p site/repo/refs/remotes site/repo/refs/mirrors
+
+          for arch in x86_64 aarch64; do
+            stable_ref="app/org.opentubex.OpenTubeX/${arch}/stable"
+            if ! ostree refs --repo=site/repo | grep --fixed-strings --line-regexp --quiet "$stable_ref"; then
+              echo "Failed to restore $stable_ref." >&2
+              exit 1
+            fi
+          done
 
       - name: Download x86_64 build directory
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
