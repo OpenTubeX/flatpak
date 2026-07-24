@@ -316,9 +316,12 @@ jobs:
       - name: Restore OSTree repo from gh-pages
         run: |
           set -euo pipefail
-          mkdir -p site/repo
+          mkdir -p site
           if git fetch origin gh-pages:refs/remotes/origin/gh-pages; then
-            git archive origin/gh-pages repo | tar -x -C site
+            git restore --source=origin/gh-pages --worktree -- repo
+            mv repo site/repo
+          else
+            mkdir -p site/repo
           fi
           mkdir -p site/repo/refs/remotes site/repo/refs/mirrors
 
