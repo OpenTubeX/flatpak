@@ -317,7 +317,7 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p site/repo
-          if git show origin/gh-pages:repo/config >/dev/null 2>&1; then
+          if git fetch origin gh-pages:refs/remotes/origin/gh-pages; then
             git archive origin/gh-pages repo | tar -x -C site
           fi
 
@@ -359,12 +359,14 @@ jobs:
           flatpak build-update-repo --gpg-sign="$FLATPAK_GPG_FINGERPRINT" \
             --default-branch=stable site/repo
 
-          for arch in x86_64 aarch64; do
-            stable_ref="app/org.opentubex.OpenTubeX/${arch}/stable"
-            if ! ostree refs --repo=site/repo | grep --fixed-strings --line-regexp --quiet "$stable_ref"; then
-              echo "Refusing to publish a repository without $stable_ref." >&2
-              exit 1
-            fi
+          for channel in stable nightly; do
+            for arch in x86_64 aarch64; do
+              ref="app/org.opentubex.OpenTubeX/${arch}/${channel}"
+              if ! ostree refs --repo=site/repo | grep --fixed-strings --line-regexp --quiet "$ref"; then
+                echo "Refusing to publish a repository without $ref." >&2
+                exit 1
+              fi
+            done
           done
 
       - name: Assemble GitHub Pages site
