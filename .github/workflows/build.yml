@@ -321,6 +321,8 @@ jobs:
       - name: Restore or initialize OSTree repo
         run: |
           set -euo pipefail
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
           mkdir -p site
 
           if git fetch origin gh-pages:refs/remotes/origin/gh-pages \
