@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>OpenTubeX Flatpak</title>
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/style.css">
+  <script src="/code-blocks.js" defer></script>
+</head>
+<body>
+  <main>
+    <h1>OpenTubeX Flatpak</h1>
+    <p>
+      Flatpak packages for
+      <a href="https://opentubex.org/">OpenTubeX</a>.
+    </p>
+
+    <h2>Install</h2>
+    <p>Add the remote once:</p>
+    <div class="card">
+      <pre><code class="language-shell">flatpak remote-add --if-not-exists opentubex \
+  https://flatpak.opentubex.org/opentubex.flatpakrepo
+
+flatpak install opentubex org.opentubex.OpenTubeX</code></pre>
+    </div>
+
+    <h2>Nightly builds</h2>
+    <p>Install the opt-in development branch from the same remote:</p>
+    <div class="card">
+      <pre><code class="language-shell">flatpak install opentubex org.opentubex.OpenTubeX//nightly</code></pre>
+    </div>
+
+    <h2>Update</h2>
+    <div class="card">
+      <pre><code class="language-shell">flatpak update org.opentubex.OpenTubeX</code></pre>
+    </div>
+
+    <h2>Offline bundles</h2>
+    <p>
+      You can also download <code>.flatpak</code> bundle files from
+      <a href="https://github.com/OpenTubeX/flatpak/releases">GitHub Releases</a>
+      and run <code>flatpak install ./org.opentubex.OpenTubeX-*.flatpak</code>.
+      Bundle installs are not tied to this remote, so they do not receive
+      <code>flatpak update</code> or updates through your software store
+      (for example Discover on KDE).
+    </p>
+  </main>
+</body>
+</html>
