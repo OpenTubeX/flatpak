@@ -297,6 +297,11 @@ jobs:
     name: Publish OSTree remote
     needs: [prepare, build]
     runs-on: ubuntu-latest
+
+    concurrency:
+      group: opentubex-flatpak-repository
+      queue: max
+
     container:
       image: ghcr.io/flathub-infra/flatpak-github-actions:freedesktop-25.08
       options: --privileged
@@ -313,25 +318,20 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Restore OSTree repo from gh-pages
+      - name: Restore or initialize OSTree repo
         run: |
           set -euo pipefail
           mkdir -p site
-          if git fetch origin gh-pages:refs/remotes/origin/gh-pages; then
+
+          if git fetch origin gh-pages:refs/remotes/origin/gh-pages \
+            && git cat-file -e origin/gh-pages:repo/config 2>/dev/null; then
             git worktree add --detach gh-pages-tree origin/gh-pages
             mv gh-pages-tree/repo site/repo
+            mkdir -p site/repo/refs/remotes site/repo/refs/mirrors
+            ostree fsck --repo=site/repo
           else
-            mkdir -p site/repo
+            ostree init --repo=site/repo --mode=archive-z2
           fi
-          mkdir -p site/repo/refs/remotes site/repo/refs/mirrors
-
-          for arch in x86_64 aarch64; do
-            stable_ref="app/org.opentubex.OpenTubeX/${arch}/stable"
-            if ! ostree refs --repo=site/repo | grep --fixed-strings --line-regexp --quiet "$stable_ref"; then
-              echo "Failed to restore $stable_ref." >&2
-              exit 1
-            fi
-          done
 
       - name: Download x86_64 build directory
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
@@ -361,25 +361,26 @@ jobs:
 
       - name: Export builds into OSTree repo
         env:
+          CHANNEL: ${{ needs.prepare.outputs.channel }}
           FLATPAK_GPG_FINGERPRINT: FCB58AF1F41F6E3157A6496438960E78A4EE5B9C
         run: |
           set -euo pipefail
           flatpak build-export --gpg-sign="$FLATPAK_GPG_FINGERPRINT" --arch=x86_64 \
-            site/repo build-dir-x86_64 "${{ needs.prepare.outputs.channel }}"
+            site/repo build-dir-x86_64 "$CHANNEL"
           flatpak build-export --gpg-sign="$FLATPAK_GPG_FINGERPRINT" --arch=aarch64 \
-            site/repo build-dir-aarch64 "${{ needs.prepare.outputs.channel }}"
+            site/repo build-dir-aarch64 "$CHANNEL"
           flatpak build-update-repo --gpg-sign="$FLATPAK_GPG_FINGERPRINT" \
             --default-branch=stable site/repo
 
-          for channel in stable nightly; do
-            for arch in x86_64 aarch64; do
-              ref="app/org.opentubex.OpenTubeX/${arch}/${channel}"
-              if ! ostree refs --repo=site/repo | grep --fixed-strings --line-regexp --quiet "$ref"; then
-                echo "Refusing to publish a repository without $ref." >&2
-                exit 1
-              fi
-            done
+          for arch in x86_64 aarch64; do
+            ref="app/org.opentubex.OpenTubeX/${arch}/${CHANNEL}"
+            if ! ostree rev-parse --repo=site/repo "$ref" >/dev/null 2>&1; then
+              echo "Refusing to publish a repository without $ref." >&2
+              exit 1
+            fi
           done
+
+          ostree fsck --repo=site/repo
 
       - name: Assemble GitHub Pages site
         run: |
@@ -393,3 +394,4 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./site
           cname: flatpak.opentubex.org
+          force_orphan: true
