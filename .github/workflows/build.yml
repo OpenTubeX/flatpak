@@ -267,6 +267,12 @@ jobs:
           flatpak install --user ./org.opentubex.OpenTubeX-${TAG}-aarch64.flatpak
           \`\`\`"
 
+          if [[ "$CHANNEL" == nightly ]]; then
+            printf -v notes \
+              '> [!WARNING]\n> This nightly build is intended for testing only and may be unstable. Regular users should use the [latest non-prerelease](https://github.com/OpenTubeX/flatpak/releases/latest).\n\n%s' \
+              "$notes"
+          fi
+
           if gh release view "$TAG" --repo "$GH_REPO" >/dev/null 2>&1; then
             gh release upload "$TAG" \
               "org.opentubex.OpenTubeX-${TAG}-x86_64.flatpak" \
@@ -311,9 +317,8 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p site/repo
-          if git fetch origin gh-pages:gh-pages 2>/dev/null \
-            && git show gh-pages:repo/config >/dev/null 2>&1; then
-            git archive gh-pages repo | tar -x -C site
+          if git show origin/gh-pages:repo/config >/dev/null 2>&1; then
+            git archive origin/gh-pages repo | tar -x -C site
           fi
 
       - name: Download x86_64 build directory
@@ -351,7 +356,16 @@ jobs:
             site/repo build-dir-x86_64 "${{ needs.prepare.outputs.channel }}"
           flatpak build-export --gpg-sign="$FLATPAK_GPG_FINGERPRINT" --arch=aarch64 \
             site/repo build-dir-aarch64 "${{ needs.prepare.outputs.channel }}"
-          flatpak build-update-repo --gpg-sign="$FLATPAK_GPG_FINGERPRINT" site/repo
+          flatpak build-update-repo --gpg-sign="$FLATPAK_GPG_FINGERPRINT" \
+            --default-branch=stable site/repo
+
+          for arch in x86_64 aarch64; do
+            stable_ref="app/org.opentubex.OpenTubeX/${arch}/stable"
+            if ! ostree refs --repo=site/repo | grep --fixed-strings --line-regexp --quiet "$stable_ref"; then
+              echo "Refusing to publish a repository without $stable_ref." >&2
+              exit 1
+            fi
+          done
 
       - name: Assemble GitHub Pages site
         run: |
