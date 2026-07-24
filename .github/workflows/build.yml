@@ -325,14 +325,32 @@ jobs:
 
           mkdir -p site
 
-          if git fetch origin gh-pages:refs/remotes/origin/gh-pages \
-            && git cat-file -e origin/gh-pages:repo/config 2>/dev/null; then
+          set +e
+          git ls-remote --exit-code --heads origin gh-pages >/dev/null
+          gh_pages_status=$?
+          set -e
+
+          if [[ "$gh_pages_status" -eq 0 ]]; then
+            git fetch --no-tags origin \
+              gh-pages:refs/remotes/origin/gh-pages
+
+            if ! git cat-file -e origin/gh-pages:repo/config 2>/dev/null; then
+              echo "The gh-pages branch exists but does not contain repo/config." >&2
+              exit 1
+            fi
+
             git worktree add --detach gh-pages-tree origin/gh-pages
             mv gh-pages-tree/repo site/repo
             mkdir -p site/repo/refs/remotes site/repo/refs/mirrors
             ostree fsck --repo=site/repo
-          else
+
+          elif [[ "$gh_pages_status" -eq 2 ]]; then
+            echo "No gh-pages branch exists; initializing the repository."
             ostree init --repo=site/repo --mode=archive-z2
+
+          else
+            echo "Failed to check the gh-pages branch; refusing to initialize an empty repository." >&2
+            exit 1
           fi
 
       - name: Download x86_64 build directory
