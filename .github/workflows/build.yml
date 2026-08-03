@@ -300,7 +300,6 @@ jobs:
 
     concurrency:
       group: opentubex-flatpak-repository
-      queue: max
 
     container:
       image: ghcr.io/flathub-infra/flatpak-github-actions:freedesktop-25.08
@@ -385,19 +384,28 @@ jobs:
           FLATPAK_GPG_FINGERPRINT: FCB58AF1F41F6E3157A6496438960E78A4EE5B9C
         run: |
           set -euo pipefail
-          flatpak build-export --gpg-sign="$FLATPAK_GPG_FINGERPRINT" --arch=x86_64 \
-            site/repo build-dir-x86_64 "$CHANNEL"
-          flatpak build-export --gpg-sign="$FLATPAK_GPG_FINGERPRINT" --arch=aarch64 \
-            site/repo build-dir-aarch64 "$CHANNEL"
+          channels=("$CHANNEL")
+          if [[ "$CHANNEL" == stable ]]; then
+            channels+=(nightly)
+          fi
+
+          for channel in "${channels[@]}"; do
+            flatpak build-export --gpg-sign="$FLATPAK_GPG_FINGERPRINT" --arch=x86_64 \
+              site/repo build-dir-x86_64 "$channel"
+            flatpak build-export --gpg-sign="$FLATPAK_GPG_FINGERPRINT" --arch=aarch64 \
+              site/repo build-dir-aarch64 "$channel"
+          done
           flatpak build-update-repo --gpg-sign="$FLATPAK_GPG_FINGERPRINT" \
             --default-branch=stable site/repo
 
-          for arch in x86_64 aarch64; do
-            ref="app/org.opentubex.OpenTubeX/${arch}/${CHANNEL}"
-            if ! ostree rev-parse --repo=site/repo "$ref" >/dev/null 2>&1; then
-              echo "Refusing to publish a repository without $ref." >&2
-              exit 1
-            fi
+          for channel in "${channels[@]}"; do
+            for arch in x86_64 aarch64; do
+              ref="app/org.opentubex.OpenTubeX/${arch}/${channel}"
+              if ! ostree rev-parse --repo=site/repo "$ref" >/dev/null 2>&1; then
+                echo "Refusing to publish a repository without $ref." >&2
+                exit 1
+              fi
+            done
           done
 
           ostree fsck --repo=site/repo
