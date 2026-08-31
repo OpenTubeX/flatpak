@@ -18,6 +18,7 @@ finish-args:
   - --talk-name=org.freedesktop.ScreenSaver
   - --talk-name=org.gnome.SessionManager
   - --talk-name=org.gnome.SettingsDaemon
+  - --unset-env=ELECTRON_RUN_AS_NODE
 modules:
   - name: opentubex
     buildsystem: simple
