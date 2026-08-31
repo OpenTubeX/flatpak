@@ -13,8 +13,7 @@ finish-args:
   - --socket=fallback-x11
   - --socket=pulseaudio
   - --share=network
-  - --own-name=org.mpris.MediaPlayer2.chromium.*
-  - --own-name=org.mpris.MediaPlayer2.opentubex
+  - --own-name=org.mpris.MediaPlayer2.opentubex.*
   - --talk-name=org.freedesktop.PowerManagement
   - --talk-name=org.freedesktop.ScreenSaver
   - --talk-name=org.gnome.SessionManager
