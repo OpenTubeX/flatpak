@@ -155,7 +155,7 @@ jobs:
           set -euo pipefail
           node opentubex/_scripts/syncAppStreamScreenshots.mjs \
             org.opentubex.OpenTubeX.metainfo.xml \
-            "$(git -C opentubex rev-parse HEAD)"
+            development
 
       - name: Commit manifest updates
         if: steps.release.outputs.channel == 'stable'
