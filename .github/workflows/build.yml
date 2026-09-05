@@ -31,6 +31,17 @@ jobs:
       - name: Check out flatpak manifest
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
+      - name: Check out OpenTubeX screenshot automation
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: OpenTubeX/OpenTubeX
+          ref: development
+          path: opentubex
+          persist-credentials: false
+          sparse-checkout: |
+            _scripts
+            docs/screenshots
+
       - name: Resolve OpenTubeX release
         id: release
         env:
@@ -138,6 +149,13 @@ jobs:
             -s "/component/releases/release[1]/url" -t text -n "" \
               -v "https://github.com/OpenTubeX/OpenTubeX/releases/tag/${TAG}" \
             org.opentubex.OpenTubeX.metainfo.xml
+
+      - name: Update AppStream screenshots
+        run: |
+          set -euo pipefail
+          node opentubex/_scripts/syncAppStreamScreenshots.mjs \
+            org.opentubex.OpenTubeX.metainfo.xml \
+            "$(git -C opentubex rev-parse HEAD)"
 
       - name: Commit manifest updates
         if: steps.release.outputs.channel == 'stable'
