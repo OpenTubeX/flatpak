@@ -24,7 +24,7 @@ jobs:
         run: flatpak-builder-lint manifest org.opentubex.OpenTubeX.yml
 
       - name: Validate AppStream metadata
-        run: AS_VALIDATE_NONET=1 flatpak-builder-lint appstream org.opentubex.OpenTubeX.metainfo.xml
+        run: flatpak-builder-lint appstream org.opentubex.OpenTubeX.metainfo.xml
 
       - name: Validate desktop entry
         run: desktop-file-validate org.opentubex.OpenTubeX.desktop
