@@ -8,6 +8,7 @@ command: run.sh
 separate-locales: false
 finish-args:
   - --device=dri
+  - --device=input
   - --share=ipc
   - --socket=wayland
   - --socket=fallback-x11
@@ -31,10 +32,10 @@ modules:
         x-checker-data:
           is-main-source: true
           type: json
-          url: https://api.github.com/repos/OpenTubeX/OpenTubeX/releases?per_page=1
-          version-query: .[0].tag_name
-          url-query: .[0].assets[] | select(.name | endswith("-linux-x64-portable.zip")) | .browser_download_url
-          timestamp-query: .[0].published_at
+          url: https://api.github.com/repos/OpenTubeX/OpenTubeX/releases?per_page=100
+          version-query: map(select(.prerelease == false and .draft == false))[0].tag_name
+          url-query: map(select(.prerelease == false and .draft == false))[0].assets[] | select(.name | endswith("-linux-x64-portable.zip")) | .browser_download_url
+          timestamp-query: map(select(.prerelease == false and .draft == false))[0].published_at
           release-url-template: https://github.com/OpenTubeX/OpenTubeX/releases/tag/$version
       - type: file
         only-arches:
@@ -42,15 +43,14 @@ modules:
         url: https://github.com/OpenTubeX/OpenTubeX/releases/download/v0.34.1-beta/opentubex-0.34.1-beta-linux-arm64-portable.zip
         sha256: 5629307286b7b1d2e635c4c70cdb997c7da1eb6dc8114d9cfa8c6b0ec3ad017a
         x-checker-data:
-          is-main-source: true
           type: json
-          url: https://api.github.com/repos/OpenTubeX/OpenTubeX/releases?per_page=1
-          version-query: .[0].tag_name
-          url-query: .[0].assets[] | select(.name | endswith("-linux-arm64-portable.zip")) | .browser_download_url
-          timestamp-query: .[0].published_at
+          url: https://api.github.com/repos/OpenTubeX/OpenTubeX/releases?per_page=100
+          version-query: map(select(.prerelease == false and .draft == false))[0].tag_name
+          url-query: map(select(.prerelease == false and .draft == false))[0].assets[] | select(.name | endswith("-linux-arm64-portable.zip")) | .browser_download_url
+          timestamp-query: map(select(.prerelease == false and .draft == false))[0].published_at
           release-url-template: https://github.com/OpenTubeX/OpenTubeX/releases/tag/$version
       - type: file
-        url: https://raw.githubusercontent.com/OpenTubeX/OpenTubeX/development/_icons/icon.svg
+        url: https://raw.githubusercontent.com/OpenTubeX/OpenTubeX/v0.34.1-beta/_icons/icon.svg
         sha256: e1b049358231e105b2b04458ffbc08613674284d7be86a4b00b88cfe46384cb7
       - type: file
         path: run.sh
