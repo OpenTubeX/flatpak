@@ -1,17 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright 2026 OpenTubeX contributors -->
 <component type="desktop-application">
   <id>org.opentubex.OpenTubeX</id>
   <metadata_license>CC0-1.0</metadata_license>
   <name>OpenTubeX</name>
-  <summary>A private YouTube client</summary>
+  <summary>Privacy-focused YouTube client</summary>
   <description>
-    <p>OpenTubeX is an open source desktop YouTube player built with privacy in
-    mind. Use YouTube without advertisements and prevent Google from tracking
-    you with their cookies and JavaScript. Available for Windows, Mac &amp;
-    Linux thanks to Electron.</p>
-    <p>Please note that OpenTubeX is currently in Beta. While it should work well
-    for most users, there are still bugs and missing features that need to be
-    addressed.</p>
+    <p>OpenTubeX is an open-source, highly customizable, privacy-focused YouTube
+    client. Watch videos without ads or a Google account, with subscriptions,
+    playlists and history stored on your device by default.</p>
+    <p>Organize subscriptions into profiles, save playback preferences per
+    channel, customize keyboard shortcuts, skip SponsorBlock segments, use
+    DeArrow, open videos in tabs, build a queue and keep watching in the
+    mini-player. Optional recommendations rank unwatched videos locally using
+    your viewing activity and feedback.</p>
+    <p>OpenTubeX uses a built-in extractor to request data and videos directly
+    from YouTube, or you can use an Invidious API instead. It does not load the
+    standard YouTube website or its page JavaScript; network services can still
+    observe request metadata unless you use a proxy.</p>
   </description>
   <launchable type="desktop-id">org.opentubex.OpenTubeX.desktop</launchable>
   <categories>
@@ -19,47 +25,73 @@
     <category>Video</category>
     <category>Network</category>
   </categories>
+  <keywords>
+    <keyword>YouTube</keyword>
+    <keyword>video</keyword>
+    <keyword>privacy</keyword>
+    <keyword>subscriptions</keyword>
+    <keyword>playlists</keyword>
+    <keyword>SponsorBlock</keyword>
+  </keywords>
   <url type="homepage">https://opentubex.org/</url>
   <url type="bugtracker">https://github.com/OpenTubeX/OpenTubeX/issues</url>
   <url type="vcs-browser">https://github.com/OpenTubeX/OpenTubeX</url>
-  <url type="translate">https://weblate.d3sox.me/engage/opentubex/</url>
+  <url type="translate">https://weblate.opentubex.org/engage/opentubex/</url>
+  <url type="donation">https://github.com/sponsors/D3SOX</url>
   <project_license>AGPL-3.0-or-later</project_license>
-  <developer_name>OpenTubeX contributors</developer_name>
+  <developer id="org.opentubex">
+    <name>OpenTubeX contributors</name>
+  </developer>
+  <branding>
+    <color type="primary" scheme_preference="light">#147a70</color>
+    <color type="primary" scheme_preference="dark">#2ec4b6</color>
+  </branding>
   <screenshots>
     <screenshot type="default">
       <caption>The main OpenTubeX window (dark theme)</caption>
-      <image type="source" width="1710" height="1026">https://raw.githubusercontent.com/OpenTubeX/OpenTubeX/development/docs/screenshots/OpenTubeX1-dark.png</image>
+      <image type="source" width="1710" height="1026">https://raw.githubusercontent.com/OpenTubeX/OpenTubeX/v0.34.1-beta/docs/screenshots/OpenTubeX1-dark.png</image>
     </screenshot>
     <screenshot>
       <caption>The main OpenTubeX window (light theme)</caption>
-      <image type="source" width="1710" height="1026">https://raw.githubusercontent.com/OpenTubeX/OpenTubeX/development/docs/screenshots/OpenTubeX1-light.png</image>
+      <image type="source" width="1710" height="1026">https://raw.githubusercontent.com/OpenTubeX/OpenTubeX/v0.34.1-beta/docs/screenshots/OpenTubeX1-light.png</image>
     </screenshot>
     <screenshot>
       <caption>Watching a video (dark theme)</caption>
-      <image type="source" width="1710" height="1026">https://raw.githubusercontent.com/OpenTubeX/OpenTubeX/development/docs/screenshots/OpenTubeX2-dark.png</image>
+      <image type="source" width="1710" height="1026">https://raw.githubusercontent.com/OpenTubeX/OpenTubeX/v0.34.1-beta/docs/screenshots/OpenTubeX2-dark.png</image>
     </screenshot>
     <screenshot>
       <caption>Watching a video (light theme)</caption>
-      <image type="source" width="1710" height="1026">https://raw.githubusercontent.com/OpenTubeX/OpenTubeX/development/docs/screenshots/OpenTubeX2-light.png</image>
+      <image type="source" width="1710" height="1026">https://raw.githubusercontent.com/OpenTubeX/OpenTubeX/v0.34.1-beta/docs/screenshots/OpenTubeX2-light.png</image>
     </screenshot>
     <screenshot>
       <caption>Settings (dark theme)</caption>
-      <image type="source" width="1710" height="1026">https://raw.githubusercontent.com/OpenTubeX/OpenTubeX/development/docs/screenshots/OpenTubeX3-dark.png</image>
+      <image type="source" width="1710" height="1026">https://raw.githubusercontent.com/OpenTubeX/OpenTubeX/v0.34.1-beta/docs/screenshots/OpenTubeX3-dark.png</image>
     </screenshot>
     <screenshot>
       <caption>Settings (light theme)</caption>
-      <image type="source" width="1710" height="1026">https://raw.githubusercontent.com/OpenTubeX/OpenTubeX/development/docs/screenshots/OpenTubeX3-light.png</image>
+      <image type="source" width="1710" height="1026">https://raw.githubusercontent.com/OpenTubeX/OpenTubeX/v0.34.1-beta/docs/screenshots/OpenTubeX3-light.png</image>
     </screenshot>
   </screenshots>
-  <content_rating type="oars-1.0">
+  <content_rating type="oars-1.1">
+    <content_attribute id="violence-cartoon">moderate</content_attribute>
+    <content_attribute id="violence-fantasy">moderate</content_attribute>
+    <content_attribute id="violence-realistic">moderate</content_attribute>
+    <content_attribute id="violence-bloodshed">moderate</content_attribute>
+    <content_attribute id="drugs-alcohol">moderate</content_attribute>
+    <content_attribute id="drugs-narcotics">moderate</content_attribute>
+    <content_attribute id="drugs-tobacco">moderate</content_attribute>
+    <content_attribute id="language-profanity">moderate</content_attribute>
+    <content_attribute id="language-humor">moderate</content_attribute>
+    <content_attribute id="language-discrimination">moderate</content_attribute>
     <content_attribute id="social-chat">moderate</content_attribute>
-    <content_attribute id="social-audio">moderate</content_attribute>
-    <content_attribute id="social-contacts">intense</content_attribute>
+    <content_attribute id="social-info">mild</content_attribute>
+    <content_attribute id="money-advertising">moderate</content_attribute>
   </content_rating>
   <supports>
     <control>keyboard</control>
     <control>pointing</control>
     <control>touch</control>
+    <control>gamepad</control>
   </supports>
   <requires>
     <display_length compare="ge">360</display_length>
