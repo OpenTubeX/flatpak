@@ -31,15 +31,29 @@ jobs:
       - name: Check out flatpak manifest
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Check out OpenTubeX screenshot automation
+      - name: Resolve latest stable metadata tag
+        id: stable-metadata
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          tag="$(gh api repos/OpenTubeX/OpenTubeX/releases/latest --jq .tag_name)"
+          if [[ ! "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+-beta$ ]]; then
+            echo "Expected the latest stable release to be a beta tag, got: $tag" >&2
+            exit 1
+          fi
+          echo "tag=${tag}" >> "$GITHUB_OUTPUT"
+
+      - name: Check out OpenTubeX metadata assets
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: OpenTubeX/OpenTubeX
-          ref: development
+          ref: ${{ steps.stable-metadata.outputs.tag }}
           path: opentubex
           persist-credentials: false
           sparse-checkout: |
             _scripts
+            _icons/icon.svg
             docs/screenshots
 
       - name: Resolve OpenTubeX release
@@ -101,17 +115,21 @@ jobs:
         env:
           TAG: ${{ steps.release.outputs.tag }}
           ASSET_VERSION: ${{ steps.release.outputs.asset_version }}
+          STABLE_METADATA_TAG: ${{ steps.stable-metadata.outputs.tag }}
         run: |
           set -euo pipefail
 
           sha256_x64="$(sha256sum "opentubex-${ASSET_VERSION}-linux-x64-portable.zip" | awk '{print $1}')"
           sha256_arm64="$(sha256sum "opentubex-${ASSET_VERSION}-linux-arm64-portable.zip" | awk '{print $1}')"
+          icon_sha256="$(sha256sum opentubex/_icons/icon.svg | awk '{print $1}')"
 
           yq -i "
             .modules[0].sources[0].url = \"https://github.com/OpenTubeX/OpenTubeX/releases/download/${TAG}/opentubex-${ASSET_VERSION}-linux-x64-portable.zip\" |
             .modules[0].sources[0].sha256 = \"${sha256_x64}\" |
             .modules[0].sources[1].url = \"https://github.com/OpenTubeX/OpenTubeX/releases/download/${TAG}/opentubex-${ASSET_VERSION}-linux-arm64-portable.zip\" |
-            .modules[0].sources[1].sha256 = \"${sha256_arm64}\"
+            .modules[0].sources[1].sha256 = \"${sha256_arm64}\" |
+            .modules[0].sources[2].url = \"https://raw.githubusercontent.com/OpenTubeX/OpenTubeX/${STABLE_METADATA_TAG}/_icons/icon.svg\" |
+            .modules[0].sources[2].sha256 = \"${icon_sha256}\"
           " org.opentubex.OpenTubeX.yml
 
       - name: Remove downloaded archives
@@ -155,7 +173,7 @@ jobs:
           set -euo pipefail
           node opentubex/_scripts/syncAppStreamScreenshots.mjs \
             org.opentubex.OpenTubeX.metainfo.xml \
-            development
+            ${{ steps.stable-metadata.outputs.tag }}
 
       - name: Commit manifest updates
         if: steps.release.outputs.channel == 'stable'
@@ -209,6 +227,13 @@ jobs:
         with:
           name: manifest
           path: .
+
+      - name: Validate Flatpak metadata
+        run: |
+          set -euo pipefail
+          flatpak-builder-lint manifest org.opentubex.OpenTubeX.yml
+          flatpak-builder-lint appstream org.opentubex.OpenTubeX.metainfo.xml
+          desktop-file-validate org.opentubex.OpenTubeX.desktop
 
       - name: Build Flatpak bundle
         uses: flatpak/flatpak-github-actions/flatpak-builder@79327416609af08178ad73b352877e51450790b3 # v6.8

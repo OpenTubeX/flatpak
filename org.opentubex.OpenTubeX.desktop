@@ -1,12 +1,13 @@
 [Desktop Entry]
 Name=OpenTubeX
-Comment=A private YouTube client
-Comment[de]=Ein privater YouTube-Client
-GenericName=OpenTubeX
+Comment=Privacy-focused YouTube client
+Comment[de]=Datenschutzorientierter YouTube-Client
+GenericName=YouTube Client
 Exec=/app/bin/run.sh %u
 Icon=org.opentubex.OpenTubeX
 Type=Application
 StartupNotify=true
 StartupWMClass=opentubex
-Categories=GNOME;GTK;AudioVideo;Network;Utility;
+Categories=AudioVideo;Video;Network;
+Keywords=YouTube;video;privacy;subscriptions;playlists;SponsorBlock;
 MimeType=x-scheme-handler/opentubex;
