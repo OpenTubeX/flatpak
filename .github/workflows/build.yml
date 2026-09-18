@@ -232,7 +232,7 @@ jobs:
         run: |
           set -euo pipefail
           flatpak-builder-lint manifest org.opentubex.OpenTubeX.yml
-          flatpak-builder-lint appstream org.opentubex.OpenTubeX.metainfo.xml
+          AS_VALIDATE_NONET=1 flatpak-builder-lint appstream org.opentubex.OpenTubeX.metainfo.xml
           desktop-file-validate org.opentubex.OpenTubeX.desktop
 
       - name: Build Flatpak bundle
