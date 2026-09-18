@@ -7,6 +7,7 @@ base-version: '25.08'
 command: run.sh
 separate-locales: false
 finish-args:
+  - --require-version=1.15.6
   - --device=dri
   - --device=input
   - --share=ipc
