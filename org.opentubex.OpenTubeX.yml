@@ -28,8 +28,8 @@ modules:
       - type: file
         only-arches:
           - x86_64
-        url: https://github.com/OpenTubeX/OpenTubeX/releases/download/v0.34.1-beta/opentubex-0.34.1-beta-linux-x64-portable.zip
-        sha256: a31fcc6e52e4c5bb8ed196817c5f1cdd3250e200462a04f30cf9651018ca3ddb
+        url: https://github.com/OpenTubeX/OpenTubeX/releases/download/v0.35.0-beta/opentubex-0.35.0-beta-linux-x64-portable.zip
+        sha256: feff6f892f1cf243308542d2ef8c16f7e159470ba6883889d6dc8caddbee3693
         x-checker-data:
           is-main-source: true
           type: json
@@ -41,8 +41,8 @@ modules:
       - type: file
         only-arches:
           - aarch64
-        url: https://github.com/OpenTubeX/OpenTubeX/releases/download/v0.34.1-beta/opentubex-0.34.1-beta-linux-arm64-portable.zip
-        sha256: 5629307286b7b1d2e635c4c70cdb997c7da1eb6dc8114d9cfa8c6b0ec3ad017a
+        url: https://github.com/OpenTubeX/OpenTubeX/releases/download/v0.35.0-beta/opentubex-0.35.0-beta-linux-arm64-portable.zip
+        sha256: 478c2ee8d2d4d875a462bfe24816f17be73b172157b75fbd7dca0029453f8c0d
         x-checker-data:
           type: json
           url: https://api.github.com/repos/OpenTubeX/OpenTubeX/releases?per_page=100
@@ -51,8 +51,8 @@ modules:
           timestamp-query: map(select(.prerelease == false and .draft == false))[0].published_at
           release-url-template: https://github.com/OpenTubeX/OpenTubeX/releases/tag/$version
       - type: file
-        url: https://raw.githubusercontent.com/OpenTubeX/OpenTubeX/v0.34.1-beta/_icons/icon.svg
-        sha256: e1b049358231e105b2b04458ffbc08613674284d7be86a4b00b88cfe46384cb7
+        url: https://raw.githubusercontent.com/OpenTubeX/OpenTubeX/v0.35.0-beta/_icons/icon.svg
+        sha256: abb7a193cc7491ffe80752a8c31e8a30bfe14f6dcb790b8220e4fbbf1c01668e
       - type: file
         path: run.sh
       - type: file
