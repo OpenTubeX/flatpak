@@ -10,6 +10,16 @@ permissions:
   contents: read
 
 jobs:
+  release-workflow:
+    name: Test release publishing
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Test release publishing
+        run: python3 -B -m unittest discover -s tests -v
+
   validate:
     name: Validate metadata
     runs-on: ubuntu-latest

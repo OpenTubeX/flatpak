@@ -316,13 +316,32 @@ jobs:
               "$notes"
           fi
 
-          if gh release view "$TAG" --repo "$GH_REPO" >/dev/null 2>&1; then
+          if release="$(gh api "repos/${GH_REPO}/releases/tags/${TAG}" 2>&1)"; then
+            if jq --exit-status '.immutable == true' <<< "$release" >/dev/null; then
+              assets=(
+                "org.opentubex.OpenTubeX-${TAG}-x86_64.flatpak"
+                "org.opentubex.OpenTubeX-${TAG}-aarch64.flatpak"
+              )
+              for asset in "${assets[@]}"; do
+                if ! jq --exit-status --arg name "$asset" \
+                  'any(.assets[]; .name == $name and .state == "uploaded" and .size > 0)' \
+                  <<< "$release" >/dev/null; then
+                  echo "Immutable release $TAG is missing a complete $asset; publish a new tag." >&2
+                  exit 1
+                fi
+              done
+              echo "Keeping the published packages in immutable release $TAG."
+              exit 0
+            fi
             gh release upload "$TAG" \
               "org.opentubex.OpenTubeX-${TAG}-x86_64.flatpak" \
               "org.opentubex.OpenTubeX-${TAG}-aarch64.flatpak" \
               --repo "$GH_REPO" \
               --clobber
-          else
+            if jq --exit-status '.draft == true' <<< "$release" >/dev/null; then
+              gh release edit "$TAG" --repo "$GH_REPO" --draft=false
+            fi
+          elif [[ "$release" == *"(HTTP 404)"* ]]; then
             release_flags=()
             if [[ "$CHANNEL" == nightly ]]; then
               release_flags+=(--prerelease)
@@ -334,6 +353,9 @@ jobs:
               --title "OpenTubeX ${VERSION} (Flatpak)" \
               "${release_flags[@]}" \
               --notes "$notes"
+          else
+            echo "$release" >&2
+            exit 1
           fi
 
   publish-repo:
