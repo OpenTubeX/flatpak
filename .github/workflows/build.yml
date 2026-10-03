@@ -460,8 +460,9 @@ jobs:
             flatpak build-export --gpg-sign="$FLATPAK_GPG_FINGERPRINT" --arch=aarch64 \
               site/repo build-dir-aarch64 "$channel"
           done
+          # Keep the current build and two rollback versions per ref within GitHub's push limit.
           flatpak build-update-repo --gpg-sign="$FLATPAK_GPG_FINGERPRINT" \
-            --default-branch=stable site/repo
+            --default-branch=stable --prune --prune-depth=2 site/repo
 
           for channel in "${channels[@]}"; do
             for arch in x86_64 aarch64; do
