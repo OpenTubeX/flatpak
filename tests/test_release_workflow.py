@@ -5,6 +5,7 @@ import subprocess
 import tempfile
 import textwrap
 import unittest
+import xml.etree.ElementTree as ElementTree
 
 ROOT = Path(__file__).resolve().parents[1]
 WORKFLOW = ROOT / ".github/workflows/build.yml"
@@ -36,14 +37,18 @@ elif args[:2] not in (["release", "upload"], ["release", "create"], ["release", 
 """
 
 
-def publish_command():
+def step_command(name):
     lines = WORKFLOW.read_text().splitlines()
-    start = lines.index("      - name: Create or update GitHub release")
+    start = lines.index(f"      - name: {name}")
     start = lines.index("        run: |", start) + 1
     end = start
     while end < len(lines) and (not lines[end].strip() or lines[end].startswith("          ")):
         end += 1
     return textwrap.dedent("\n".join(lines[start:end]))
+
+
+def publish_command():
+    return step_command("Create or update GitHub release")
 
 
 class ReleaseWorkflowTest(unittest.TestCase):
@@ -142,6 +147,49 @@ class ReleaseWorkflowTest(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertEqual(mutations, [])
         self.assertIn("HTTP 403", result.stderr)
+
+
+
+class ReleaseNotesTest(unittest.TestCase):
+    def add_notes(self, converter=True):
+        with tempfile.TemporaryDirectory() as directory:
+            work = Path(directory)
+            metainfo = work / "org.opentubex.OpenTubeX.metainfo.xml"
+            metainfo.write_text((ROOT / "org.opentubex.OpenTubeX.metainfo.xml").read_text())
+            for name, script in {
+                "gh": '#!/bin/sh\ntest "$*" = "api repos/OpenTubeX/OpenTubeX/releases/tags/v0.38.0-beta --jq .body" || exit 1\necho "## Highlights"\n',
+                "node": '#!/bin/sh\ntest "$2" = appstream && grep -q Highlights "$3" || exit 1\nprintf "<p>Highlights</p>\\n<ul>\\n  <li>Added &amp; groups</li>\\n</ul>\\n"\n',
+            }.items():
+                (work / name).write_text(script)
+                (work / name).chmod(0o755)
+            if converter:
+                (work / "opentubex/_scripts").mkdir(parents=True)
+                (work / "opentubex/_scripts/storeReleaseNotes.mjs").touch()
+            env = {**os.environ, "PATH": f"{work}:{os.environ['PATH']}", "RUNNER_TEMP": str(work), "TAG": "v0.38.0-beta"}
+            result = subprocess.run(
+                ["bash", "-c", step_command("Add stable release notes to AppStream")], cwd=work, env=env,
+                capture_output=True, text=True,
+            )
+            return result, metainfo.read_text()
+
+    def test_stable_release_notes_become_the_release_description(self):
+        result, metainfo = self.add_notes()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("""      <url type="details">""", metainfo)
+        self.assertIn("""      <description>
+        <p>Highlights</p>
+        <ul>
+          <li>Added &amp; groups</li>
+        </ul>
+      </description>
+    </release>""", metainfo)
+        release = ElementTree.fromstring(metainfo).find("releases/release")
+        self.assertEqual(release.findtext("description/ul/li"), "Added & groups")
+
+    def test_releases_without_the_converter_keep_their_link(self):
+        result, metainfo = self.add_notes(converter=False)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(metainfo, (ROOT / "org.opentubex.OpenTubeX.metainfo.xml").read_text())
 
 
 if __name__ == "__main__":

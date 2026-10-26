@@ -168,6 +168,36 @@ jobs:
               -v "https://github.com/OpenTubeX/OpenTubeX/releases/tag/${TAG}" \
             org.opentubex.OpenTubeX.metainfo.xml
 
+      - name: Add stable release notes to AppStream
+        if: steps.release.outputs.channel == 'stable'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.release.outputs.tag }}
+        run: |
+          set -euo pipefail
+
+          converter=opentubex/_scripts/storeReleaseNotes.mjs
+          if [[ ! -f "$converter" ]]; then
+            echo "::notice title=Release notes unavailable::The latest OpenTubeX release cannot convert release notes"
+            exit 0
+          fi
+
+          gh api "repos/OpenTubeX/OpenTubeX/releases/tags/${TAG}" --jq .body > "${RUNNER_TEMP}/release-notes.md"
+          node "$converter" appstream "${RUNNER_TEMP}/release-notes.md" > "${RUNNER_TEMP}/release-notes.xml"
+          python3 - org.opentubex.OpenTubeX.metainfo.xml "${RUNNER_TEMP}/release-notes.xml" <<'EOF'
+          import sys
+          from pathlib import Path
+
+          metainfo = Path(sys.argv[1])
+          notes = Path(sys.argv[2]).read_text().strip().splitlines()
+          end = "\n    </release>"
+          text = metainfo.read_text()
+          if text.count(end) != 1:
+              sys.exit("Expected exactly one AppStream release")
+          description = "\n".join(["      <description>", *(f"        {line}" for line in notes), "      </description>"])
+          metainfo.write_text(text.replace(end, f"\n{description}{end}"))
+          EOF
+
       - name: Update AppStream screenshots
         run: |
           set -euo pipefail
