@@ -55,6 +55,7 @@ jobs:
             _scripts
             _icons/icon.svg
             docs/screenshots
+            src/renderer/helpers/releaseNotePlatforms.js
 
       - name: Resolve OpenTubeX release
         id: release
