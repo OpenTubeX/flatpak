@@ -5,3 +5,4 @@
 *.flatpak
 opentubex-*-portable.zip
 .gpg-*.tmp
+__pycache__/
