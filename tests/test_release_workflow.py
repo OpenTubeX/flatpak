@@ -1,6 +1,7 @@
 import json
 import os
 from pathlib import Path
+import re
 import subprocess
 import tempfile
 import textwrap
@@ -150,12 +151,23 @@ class ReleaseWorkflowTest(unittest.TestCase):
 
 
 
+def new_release_metainfo():
+    """The metainfo as "Update AppStream release entry" leaves it for v0.38.0-beta."""
+    release = """  <releases>
+    <release version="0.38.0-beta" date="2026-11-10">
+      <url type="details">https://github.com/OpenTubeX/OpenTubeX/releases/tag/v0.38.0-beta</url>
+    </release>
+  </releases>"""
+    text = (ROOT / "org.opentubex.OpenTubeX.metainfo.xml").read_text()
+    return re.sub(r"  <releases>.*</releases>", release, text, count=1, flags=re.S)
+
+
 class ReleaseNotesTest(unittest.TestCase):
     def add_notes(self, converter=True):
         with tempfile.TemporaryDirectory() as directory:
             work = Path(directory)
             metainfo = work / "org.opentubex.OpenTubeX.metainfo.xml"
-            metainfo.write_text((ROOT / "org.opentubex.OpenTubeX.metainfo.xml").read_text())
+            metainfo.write_text(new_release_metainfo())
             for name, script in {
                 "gh": '#!/bin/sh\ntest "$*" = "api repos/OpenTubeX/OpenTubeX/releases/tags/v0.38.0-beta --jq .body" || exit 1\necho "## Highlights"\n',
                 "node": '#!/bin/sh\ntest "$2" = appstream && grep -q Highlights "$3" || exit 1\nprintf "<p>Highlights</p>\\n<ul>\\n  <li>Added &amp; groups</li>\\n</ul>\\n"\n',
@@ -184,12 +196,14 @@ class ReleaseNotesTest(unittest.TestCase):
       </description>
     </release>""", metainfo)
         release = ElementTree.fromstring(metainfo).find("releases/release")
+        self.assertEqual(release.get("version"), "0.38.0-beta")
+        self.assertEqual(len(release.findall("description")), 1)
         self.assertEqual(release.findtext("description/ul/li"), "Added & groups")
 
     def test_releases_without_the_converter_keep_their_link(self):
         result, metainfo = self.add_notes(converter=False)
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertEqual(metainfo, (ROOT / "org.opentubex.OpenTubeX.metainfo.xml").read_text())
+        self.assertEqual(metainfo, new_release_metainfo())
 
 
 if __name__ == "__main__":
