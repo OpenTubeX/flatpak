@@ -511,7 +511,7 @@ jobs:
         run: |
           set -euo pipefail
           cp pages/CNAME pages/code-blocks.js pages/opentubex.flatpakrepo \
-            pages/index.html pages/style.css pages/favicon.svg pages/favicon.ico site/
+            pages/index.html pages/og.png pages/style.css pages/favicon.svg pages/favicon.ico site/
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@84c30a85c19949d7eee79c4ff27748b70285e453 # v4.1.0
