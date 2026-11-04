@@ -43,8 +43,8 @@
     <name>OpenTubeX contributors</name>
   </developer>
   <branding>
-    <color type="primary" scheme_preference="light">#147a70</color>
-    <color type="primary" scheme_preference="dark">#2ec4b6</color>
+    <color type="primary" scheme_preference="light">#b8291c</color>
+    <color type="primary" scheme_preference="dark">#f34132</color>
   </branding>
   <screenshots>
     <screenshot type="default">
