@@ -28,9 +28,11 @@
     </p>
 
     <h2 id="install">Install</h2>
-    <p>Add the remote once:</p>
+    <p>Add the remotes once. OpenTubeX uses its runtime from Flathub:</p>
     <div class="card">
-      <pre><code class="language-shell">flatpak remote-add --if-not-exists opentubex \
+      <pre><code class="language-shell">flatpak remote-add --if-not-exists flathub \
+  https://dl.flathub.org/repo/flathub.flatpakrepo
+flatpak remote-add --if-not-exists opentubex \
   https://flatpak.opentubex.org/opentubex.flatpakrepo
 
 flatpak install opentubex org.opentubex.OpenTubeX</code></pre>
