@@ -140,13 +140,9 @@ h2 {
   line-height: 1.2;
 }
 
-p,
-li {
-  color: var(--slate);
-}
-
 p {
   margin: 0.75rem 0;
+  color: var(--slate);
 }
 
 a {
@@ -175,6 +171,7 @@ p code {
 }
 
 .card {
+  position: relative;
   max-width: 100%;
   min-width: 0;
   margin: 1rem 0 1.35rem;
@@ -185,66 +182,16 @@ p code {
   box-shadow: 0 0.8rem 2.5rem rgb(0 0 0 / 10%);
 }
 
-.code-block {
-  position: relative;
-  min-width: 0;
-}
-
 pre {
   max-width: 100%;
   margin: 0;
-  padding: 1rem 3.8rem 1.35rem 1.1rem;
+  padding: 1rem 3.8rem 1rem 1.1rem;
   overflow-x: auto;
   color: var(--code-text);
   font-size: 0.84rem;
   line-height: 1.65;
-  scrollbar-width: none;
-}
-
-pre::-webkit-scrollbar {
-  display: none;
-}
-
-.code-scrollbar {
-  position: absolute;
-  right: 0.4rem;
-  bottom: 0.15rem;
-  left: 0.4rem;
-  z-index: 3;
-  display: flex;
-  align-items: flex-end;
-  height: 0.7rem;
-  background: transparent;
-  touch-action: none;
-  user-select: none;
-  cursor: pointer;
-}
-
-.code-scrollbar[hidden] {
-  display: none !important;
-}
-
-.code-scrollbar__thumb {
-  height: 3px;
-  min-width: 1.5rem;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--scrollbar-thumb) 88%, transparent);
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--surface) 55%, transparent);
-  cursor: grab;
-  outline: none;
-}
-
-.code-scrollbar__thumb:hover,
-.code-scrollbar__thumb:focus-visible {
-  height: 4px;
-  background: var(--scrollbar-thumb-hover);
-}
-
-.code-scrollbar.is-dragging .code-scrollbar__thumb,
-.code-scrollbar__thumb:active {
-  cursor: grabbing;
-  height: 4px;
-  background: var(--scrollbar-thumb-hover);
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) transparent;
 }
 
 code {
@@ -276,7 +223,7 @@ code {
   transition: color 0.15s, border-color 0.15s, opacity 0.15s, background 0.15s;
 }
 
-.code-block:hover .copy-button,
+.card:hover .copy-button,
 .copy-button:focus-visible,
 .copy-button[data-copied] {
   opacity: 1;
