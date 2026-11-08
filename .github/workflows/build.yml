@@ -101,8 +101,8 @@ jobs:
           set -euo pipefail
           for arch in x64 arm64; do
             asset="opentubex-${ASSET_VERSION}-linux-${arch}-portable.zip"
-            wget --quiet \
-              --output-document="$asset" \
+            curl --fail --silent --show-error --location --retry 5 --retry-all-errors \
+              --output "$asset" \
               "https://github.com/OpenTubeX/OpenTubeX/releases/download/${TAG}/${asset}"
           done
 
