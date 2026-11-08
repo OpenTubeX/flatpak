@@ -31,26 +31,11 @@ modules:
           - x86_64
         url: https://github.com/OpenTubeX/OpenTubeX/releases/download/v0.37.4-beta/opentubex-0.37.4-beta-linux-x64-portable.zip
         sha256: 52b00503b7d84ef0d4f8fbd0eba7695079c0d56d2ab83a97eb94eb5eb3189040
-        x-checker-data:
-          is-main-source: true
-          type: json
-          url: https://api.github.com/repos/OpenTubeX/OpenTubeX/releases?per_page=100
-          version-query: map(select(.prerelease == false and .draft == false))[0].tag_name
-          url-query: map(select(.prerelease == false and .draft == false))[0].assets[] | select(.name | endswith("-linux-x64-portable.zip")) | .browser_download_url
-          timestamp-query: map(select(.prerelease == false and .draft == false))[0].published_at
-          release-url-template: https://github.com/OpenTubeX/OpenTubeX/releases/tag/$version
       - type: file
         only-arches:
           - aarch64
         url: https://github.com/OpenTubeX/OpenTubeX/releases/download/v0.37.4-beta/opentubex-0.37.4-beta-linux-arm64-portable.zip
         sha256: 9d6defe42ae985b2b8e15d2076ba83700aa2bcce5bd4846f4598502a1cf381ba
-        x-checker-data:
-          type: json
-          url: https://api.github.com/repos/OpenTubeX/OpenTubeX/releases?per_page=100
-          version-query: map(select(.prerelease == false and .draft == false))[0].tag_name
-          url-query: map(select(.prerelease == false and .draft == false))[0].assets[] | select(.name | endswith("-linux-arm64-portable.zip")) | .browser_download_url
-          timestamp-query: map(select(.prerelease == false and .draft == false))[0].published_at
-          release-url-template: https://github.com/OpenTubeX/OpenTubeX/releases/tag/$version
       - type: file
         url: https://raw.githubusercontent.com/OpenTubeX/OpenTubeX/v0.37.4-beta/_icons/icon.svg
         sha256: abb7a193cc7491ffe80752a8c31e8a30bfe14f6dcb790b8220e4fbbf1c01668e
@@ -68,28 +53,3 @@ modules:
       - install -Dm644 org.opentubex.OpenTubeX.desktop -t /app/share/applications/
       - install -Dm644 org.opentubex.OpenTubeX.metainfo.xml -t /app/share/metainfo/
       - patch-electron-desktop-filename "${FLATPAK_DEST}"/opentubex/resources/app.asar
-  - name: deno
-    buildsystem: simple
-    build-commands:
-      - install -Dt /app/bin deno
-    sources:
-      - type: archive
-        only-arches:
-          - x86_64
-        url: https://github.com/denoland/deno/releases/download/v2.9.7/deno-x86_64-unknown-linux-gnu.zip
-        sha256: c6527f24f4b16031d3ae4fa9f658d5f11534c8d84ce7dc8502420280919c3490
-        x-checker-data:
-          type: json
-          url: https://api.github.com/repos/denoland/deno/releases/latest
-          version-query: .tag_name
-          url-query: .assets[] | select(.name == "deno-x86_64-unknown-linux-gnu.zip").browser_download_url
-      - type: archive
-        only-arches:
-          - aarch64
-        url: https://github.com/denoland/deno/releases/download/v2.9.7/deno-aarch64-unknown-linux-gnu.zip
-        sha256: c832298b1ad4422481334855f6003e0f54145762c5a134f20a489511d2f65bbf
-        x-checker-data:
-          type: json
-          url: https://api.github.com/repos/denoland/deno/releases/latest
-          version-query: .tag_name
-          url-query: .assets[] | select(.name == "deno-aarch64-unknown-linux-gnu.zip").browser_download_url
