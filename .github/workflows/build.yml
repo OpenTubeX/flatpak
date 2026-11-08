@@ -400,6 +400,7 @@ jobs:
         run: |
           set -euo pipefail
           grep '^GPGKey=' pages/opentubex.flatpakrepo | cut -d= -f2- | base64 -d > "$RUNNER_TEMP/opentubex.gpg"
+          mkdir -p site
           ostree init --repo=site/repo --mode=archive-z2
           ostree remote add --repo=site/repo \
             --gpg-import="$RUNNER_TEMP/opentubex.gpg" \
