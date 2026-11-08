@@ -45,8 +45,8 @@ class RepositoryRetentionTest(unittest.TestCase):
             for arch in ("x86_64", "aarch64"):
                 (source / "metadata").write_text(
                     "[Application]\nname=org.opentubex.OpenTubeX\n"
-                    f"runtime=org.freedesktop.Platform/{arch}/25.08\n"
-                    f"sdk=org.freedesktop.Sdk/{arch}/25.08\n"
+                    f"runtime=org.freedesktop.Platform/{arch}/26.08\n"
+                    f"sdk=org.freedesktop.Sdk/{arch}/26.08\n"
                 )
                 for channel in ("stable", "nightly"):
                     ref = f"app/org.opentubex.OpenTubeX/{arch}/{channel}"

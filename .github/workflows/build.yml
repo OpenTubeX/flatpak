@@ -93,23 +93,17 @@ jobs:
             echo "published_at=${published_at}"
           } >> "$GITHUB_OUTPUT"
 
-      - name: Install yq
-        run: |
-          sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/download/v4.53.6/yq_linux_amd64
-          sudo chmod +x /usr/local/bin/yq
-
       - name: Download portable archives
         env:
-          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.release.outputs.tag }}
+          ASSET_VERSION: ${{ steps.release.outputs.asset_version }}
         run: |
           set -euo pipefail
-          asset_version="${{ steps.release.outputs.asset_version }}"
-          tag="${{ steps.release.outputs.tag }}"
           for arch in x64 arm64; do
-            asset="opentubex-${asset_version}-linux-${arch}-portable.zip"
+            asset="opentubex-${ASSET_VERSION}-linux-${arch}-portable.zip"
             wget --quiet \
               --output-document="$asset" \
-              "https://github.com/OpenTubeX/OpenTubeX/releases/download/${tag}/${asset}"
+              "https://github.com/OpenTubeX/OpenTubeX/releases/download/${TAG}/${asset}"
           done
 
       - name: Update manifest checksums
@@ -177,14 +171,8 @@ jobs:
         run: |
           set -euo pipefail
 
-          converter=opentubex/_scripts/storeReleaseNotes.mjs
-          if [[ ! -f "$converter" ]]; then
-            echo "::notice title=Release notes unavailable::The latest OpenTubeX release cannot convert release notes"
-            exit 0
-          fi
-
           gh api "repos/OpenTubeX/OpenTubeX/releases/tags/${TAG}" --jq .body > "${RUNNER_TEMP}/release-notes.md"
-          node "$converter" appstream "${RUNNER_TEMP}/release-notes.md" > "${RUNNER_TEMP}/release-notes.xml"
+          node opentubex/_scripts/storeReleaseNotes.mjs appstream "${RUNNER_TEMP}/release-notes.md" > "${RUNNER_TEMP}/release-notes.xml"
           python3 - org.opentubex.OpenTubeX.metainfo.xml "${RUNNER_TEMP}/release-notes.xml" <<'EOF'
           import sys
           from pathlib import Path
@@ -200,11 +188,13 @@ jobs:
           EOF
 
       - name: Update AppStream screenshots
+        env:
+          STABLE_METADATA_TAG: ${{ steps.stable-metadata.outputs.tag }}
         run: |
           set -euo pipefail
           node opentubex/_scripts/syncAppStreamScreenshots.mjs \
             org.opentubex.OpenTubeX.metainfo.xml \
-            ${{ steps.stable-metadata.outputs.tag }}
+            "$STABLE_METADATA_TAG"
 
       - name: Commit manifest updates
         if: steps.release.outputs.channel == 'stable'
@@ -237,11 +227,8 @@ jobs:
     needs: prepare
     runs-on: ${{ matrix.runner }}
     container:
-      image: ghcr.io/flathub-infra/flatpak-github-actions:freedesktop-25.08
+      image: ghcr.io/flathub-infra/flatpak-github-actions:freedesktop-26.08
       options: --privileged
-
-    permissions:
-      actions: read
 
     strategy:
       fail-fast: false
@@ -271,12 +258,14 @@ jobs:
         with:
           arch: ${{ matrix.arch }}
           bundle: org.opentubex.OpenTubeX-${{ matrix.arch }}.flatpak
+          build-bundle: ${{ needs.prepare.outputs.channel == 'stable' }}
           manifest-path: org.opentubex.OpenTubeX.yml
           upload-artifact: false
           keep-build-dirs: true
           cache-key: flatpak-builder-${{ matrix.arch }}-${{ needs.prepare.outputs.tag }}
 
       - name: Upload Flatpak bundle
+        if: needs.prepare.outputs.channel == 'stable'
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: flatpak-${{ matrix.arch }}
@@ -284,10 +273,12 @@ jobs:
           if-no-files-found: error
 
       - name: Archive build directory
+        env:
+          ARCH: ${{ matrix.arch }}
         run: |
           set -euo pipefail
-          mv flatpak_app "build-dir-${{ matrix.arch }}"
-          tar -cpf "build-dir-${{ matrix.arch }}.tar" "build-dir-${{ matrix.arch }}"
+          mv flatpak_app "build-dir-${ARCH}"
+          tar -cpf "build-dir-${ARCH}.tar" "build-dir-${ARCH}"
 
       - name: Upload build directory
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -299,11 +290,11 @@ jobs:
   release:
     name: Publish GitHub release
     needs: [prepare, build]
+    if: needs.prepare.outputs.channel == 'stable'
     runs-on: ubuntu-latest
 
     permissions:
       contents: write
-      actions: read
 
     steps:
       - name: Download Flatpak bundles
@@ -328,7 +319,6 @@ jobs:
           GH_REPO: ${{ github.repository }}
           TAG: ${{ needs.prepare.outputs.tag }}
           VERSION: ${{ needs.prepare.outputs.version }}
-          CHANNEL: ${{ needs.prepare.outputs.channel }}
         run: |
           set -euo pipefail
 
@@ -340,12 +330,6 @@ jobs:
           # or for ARM64:
           flatpak install --user ./org.opentubex.OpenTubeX-${TAG}-aarch64.flatpak
           \`\`\`"
-
-          if [[ "$CHANNEL" == nightly ]]; then
-            printf -v notes \
-              '> [!WARNING]\n> This nightly build is intended for testing only and may be unstable. Regular users should use the [latest non-prerelease](https://github.com/OpenTubeX/flatpak/releases/latest).\n\n%s' \
-              "$notes"
-          fi
 
           if release="$(gh api "repos/${GH_REPO}/releases/tags/${TAG}" 2>&1)"; then
             if jq --exit-status '.immutable == true' <<< "$release" >/dev/null; then
@@ -373,16 +357,11 @@ jobs:
               gh release edit "$TAG" --repo "$GH_REPO" --draft=false
             fi
           elif [[ "$release" == *"(HTTP 404)"* ]]; then
-            release_flags=()
-            if [[ "$CHANNEL" == nightly ]]; then
-              release_flags+=(--prerelease)
-            fi
             gh release create "$TAG" \
               "org.opentubex.OpenTubeX-${TAG}-x86_64.flatpak" \
               "org.opentubex.OpenTubeX-${TAG}-aarch64.flatpak" \
               --repo "$GH_REPO" \
               --title "OpenTubeX ${VERSION} (Flatpak)" \
-              "${release_flags[@]}" \
               --notes "$notes"
           else
             echo "$release" >&2
@@ -394,16 +373,22 @@ jobs:
     needs: [prepare, build]
     runs-on: ubuntu-latest
 
+    # Each run restores the live repository and deploys it again, so runs must
+    # not overlap. Queue them all instead of canceling a pending release.
     concurrency:
       group: opentubex-flatpak-repository
+      queue: max
 
     container:
-      image: ghcr.io/flathub-infra/flatpak-github-actions:freedesktop-25.08
+      image: ghcr.io/flathub-infra/flatpak-github-actions:freedesktop-26.08
       options: --privileged
 
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
     permissions:
-      contents: write
-      actions: read
+      contents: read
       pages: write
       id-token: write
 
@@ -411,42 +396,20 @@ jobs:
       - name: Check out flatpak manifest
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          fetch-depth: 0
+          persist-credentials: false
 
-      - name: Restore or initialize OSTree repo
+      - name: Restore published OSTree repo
         run: |
           set -euo pipefail
-          git config --global --add safe.directory "$GITHUB_WORKSPACE"
-
-          mkdir -p site
-
-          set +e
-          git ls-remote --exit-code --heads origin gh-pages >/dev/null
-          gh_pages_status=$?
-          set -e
-
-          if [[ "$gh_pages_status" -eq 0 ]]; then
-            git fetch --no-tags origin \
-              gh-pages:refs/remotes/origin/gh-pages
-
-            if ! git cat-file -e origin/gh-pages:repo/config 2>/dev/null; then
-              echo "The gh-pages branch exists but does not contain repo/config." >&2
-              exit 1
-            fi
-
-            git worktree add --detach gh-pages-tree origin/gh-pages
-            mv gh-pages-tree/repo site/repo
-            mkdir -p site/repo/refs/remotes site/repo/refs/mirrors
-            ostree fsck --repo=site/repo
-
-          elif [[ "$gh_pages_status" -eq 2 ]]; then
-            echo "No gh-pages branch exists; initializing the repository."
-            ostree init --repo=site/repo --mode=archive-z2
-
-          else
-            echo "Failed to check the gh-pages branch; refusing to initialize an empty repository." >&2
-            exit 1
-          fi
+          grep '^GPGKey=' pages/opentubex.flatpakrepo | cut -d= -f2- | base64 -d > "$RUNNER_TEMP/opentubex.gpg"
+          ostree init --repo=site/repo --mode=archive-z2
+          ostree remote add --repo=site/repo \
+            --gpg-import="$RUNNER_TEMP/opentubex.gpg" \
+            --set=gpg-verify-summary=true \
+            published https://flatpak.opentubex.org/repo
+          # The current build and two rollback versions, matching --prune-depth below.
+          ostree pull --repo=site/repo --mirror --depth=2 published
+          ostree remote delete --repo=site/repo published
 
       - name: Download x86_64 build directory
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
@@ -491,11 +454,11 @@ jobs:
             flatpak build-export --gpg-sign="$FLATPAK_GPG_FINGERPRINT" --arch=aarch64 \
               site/repo build-dir-aarch64 "$channel"
           done
-          # Keep the current build and two rollback versions per ref within GitHub's push limit.
+          # Keep the current build and two rollback versions per ref within GitHub Pages' size limit.
           flatpak build-update-repo --gpg-sign="$FLATPAK_GPG_FINGERPRINT" \
             --default-branch=stable --prune --prune-depth=2 site/repo
 
-          for channel in "${channels[@]}"; do
+          for channel in stable nightly; do
             for arch in x86_64 aarch64; do
               ref="app/org.opentubex.OpenTubeX/${arch}/${channel}"
               if ! ostree rev-parse --repo=site/repo "$ref" >/dev/null 2>&1; then
@@ -506,17 +469,17 @@ jobs:
           done
 
           ostree fsck --repo=site/repo
+          # Clients only read the summary, objects and deltas.
+          rm -rf site/repo/tmp
 
       - name: Assemble GitHub Pages site
-        run: |
-          set -euo pipefail
-          cp pages/CNAME pages/code-blocks.js pages/opentubex.flatpakrepo \
-            pages/index.html pages/og.png pages/style.css pages/favicon.svg pages/favicon.ico site/
+        run: cp -r pages/. site/
+
+      - name: Upload GitHub Pages site
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: site
 
       - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@84c30a85c19949d7eee79c4ff27748b70285e453 # v4.1.0
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./site
-          cname: flatpak.opentubex.org
-          force_orphan: true
+        id: deployment
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1

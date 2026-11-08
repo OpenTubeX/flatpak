@@ -10,8 +10,8 @@ import xml.etree.ElementTree as ElementTree
 
 ROOT = Path(__file__).resolve().parents[1]
 WORKFLOW = ROOT / ".github/workflows/build.yml"
-TAG = "v0.35.2-nightly-1757"
-ASSETS = ["org.opentubex.OpenTubeX-v0.35.2-nightly-1757-x86_64.flatpak","org.opentubex.OpenTubeX-v0.35.2-nightly-1757-aarch64.flatpak"]
+TAG = "v0.35.2-beta"
+ASSETS = ["org.opentubex.OpenTubeX-v0.35.2-beta-x86_64.flatpak", "org.opentubex.OpenTubeX-v0.35.2-beta-aarch64.flatpak"]
 
 FAKE_GH = """#!/usr/bin/env python3
 import json
@@ -53,7 +53,7 @@ def publish_command():
 
 
 class ReleaseWorkflowTest(unittest.TestCase):
-    def run_publish(self, state, nightly=True):
+    def run_publish(self, state):
         with tempfile.TemporaryDirectory() as directory:
             work = Path(directory)
             gh = work / "gh"
@@ -69,9 +69,7 @@ class ReleaseWorkflowTest(unittest.TestCase):
                 "GH_CALLS": str(calls),
                 "GH_REPO": "OpenTubeX/flatpak",
                 "TAG": TAG,
-                "VERSION": "0.35.2-nightly-1757",
-                "CHANNEL": "nightly" if nightly else "stable",
-                "PRERELEASE": "true" if nightly else "false",
+                "VERSION": "0.35.2",
             }
             result = subprocess.run(
                 ["bash", "-c", publish_command()], cwd=work, env=env,
@@ -128,20 +126,14 @@ class ReleaseWorkflowTest(unittest.TestCase):
         ])
         self.assertIn("--draft=false", mutations[1])
 
-    def test_new_nightly_uploads_all_packages_during_creation(self):
+    def test_new_release_uploads_all_packages_during_creation(self):
         result, mutations = self.run_publish({"error": 404})
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(len(mutations), 1)
         self.assertEqual(mutations[0][:2], ["release", "create"])
-        self.assertIn("--prerelease", mutations[0])
+        self.assertNotIn("--prerelease", mutations[0])
         for asset in ASSETS:
             self.assertIn(asset, mutations[0])
-
-    def test_new_stable_release_is_not_a_prerelease(self):
-        result, mutations = self.run_publish({"error": 404}, nightly=False)
-        self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertEqual(mutations[0][:2], ["release", "create"])
-        self.assertNotIn("--prerelease", mutations[0])
 
     def test_lookup_error_does_not_create_release(self):
         result, mutations = self.run_publish({"error": 403})
@@ -163,7 +155,7 @@ def new_release_metainfo():
 
 
 class ReleaseNotesTest(unittest.TestCase):
-    def add_notes(self, converter=True):
+    def add_notes(self):
         with tempfile.TemporaryDirectory() as directory:
             work = Path(directory)
             metainfo = work / "org.opentubex.OpenTubeX.metainfo.xml"
@@ -174,9 +166,6 @@ class ReleaseNotesTest(unittest.TestCase):
             }.items():
                 (work / name).write_text(script)
                 (work / name).chmod(0o755)
-            if converter:
-                (work / "opentubex/_scripts").mkdir(parents=True)
-                (work / "opentubex/_scripts/storeReleaseNotes.mjs").touch()
             env = {**os.environ, "PATH": f"{work}:{os.environ['PATH']}", "RUNNER_TEMP": str(work), "TAG": "v0.38.0-beta"}
             result = subprocess.run(
                 ["bash", "-c", step_command("Add stable release notes to AppStream")], cwd=work, env=env,
@@ -199,11 +188,6 @@ class ReleaseNotesTest(unittest.TestCase):
         self.assertEqual(release.get("version"), "0.38.0-beta")
         self.assertEqual(len(release.findall("description")), 1)
         self.assertEqual(release.findtext("description/ul/li"), "Added & groups")
-
-    def test_releases_without_the_converter_keep_their_link(self):
-        result, metainfo = self.add_notes(converter=False)
-        self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertEqual(metainfo, new_release_metainfo())
 
 
 if __name__ == "__main__":
