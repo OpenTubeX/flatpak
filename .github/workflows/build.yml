@@ -247,7 +247,8 @@ jobs:
         run: |
           set -euo pipefail
           flatpak-builder-lint manifest org.opentubex.OpenTubeX.yml
-          flatpak-builder-lint appstream org.opentubex.OpenTubeX.metainfo.xml
+          # Offline, so a github.com outage cannot block a release; validate.yml checks the URLs.
+          appstreamcli validate --no-net --explain org.opentubex.OpenTubeX.metainfo.xml
           desktop-file-validate org.opentubex.OpenTubeX.desktop
 
       - name: Build Flatpak bundle
