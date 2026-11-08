@@ -95,16 +95,13 @@ jobs:
 
       - name: Download portable archives
         env:
+          GH_TOKEN: ${{ github.token }}
           TAG: ${{ steps.release.outputs.tag }}
           ASSET_VERSION: ${{ steps.release.outputs.asset_version }}
         run: |
-          set -euo pipefail
-          for arch in x64 arm64; do
-            asset="opentubex-${ASSET_VERSION}-linux-${arch}-portable.zip"
-            curl --fail --silent --show-error --location --retry 5 --retry-all-errors \
-              --output "$asset" \
-              "https://github.com/OpenTubeX/OpenTubeX/releases/download/${TAG}/${asset}"
-          done
+          gh release download "$TAG" --repo OpenTubeX/OpenTubeX \
+            --pattern "opentubex-${ASSET_VERSION}-linux-x64-portable.zip" \
+            --pattern "opentubex-${ASSET_VERSION}-linux-arm64-portable.zip"
 
       - name: Update manifest checksums
         env:
