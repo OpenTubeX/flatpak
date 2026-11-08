@@ -1,0 +1,5 @@
+{
+  "org.opentubex.OpenTubeX": {
+    "finish-args-kwin-talk-name": "KDE Plasma's Wayland session has no other way to restore the Picture-in-Picture window's position and size or to report when the main window is minimized, so the app loads small KWin scripts for both. This repository publishes to its own remote, not Flathub."
+  }
+}

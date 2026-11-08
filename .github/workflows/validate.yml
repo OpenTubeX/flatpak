@@ -33,7 +33,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Validate manifest
-        run: flatpak-builder-lint manifest org.opentubex.OpenTubeX.yml
+        run: flatpak-builder-lint --exceptions --user-exceptions flatpak-builder-lint-exceptions.json manifest org.opentubex.OpenTubeX.yml
 
       - name: Validate AppStream metadata
         run: flatpak-builder-lint appstream org.opentubex.OpenTubeX.metainfo.xml

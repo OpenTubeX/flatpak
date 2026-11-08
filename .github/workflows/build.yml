@@ -218,6 +218,7 @@ jobs:
             org.opentubex.OpenTubeX.desktop
             org.opentubex.OpenTubeX.metainfo.xml
             run.sh
+            flatpak-builder-lint-exceptions.json
 
   build:
     name: Build ${{ matrix.arch }}
@@ -246,7 +247,7 @@ jobs:
       - name: Validate Flatpak metadata
         run: |
           set -euo pipefail
-          flatpak-builder-lint manifest org.opentubex.OpenTubeX.yml
+          flatpak-builder-lint --exceptions --user-exceptions flatpak-builder-lint-exceptions.json manifest org.opentubex.OpenTubeX.yml
           # Offline, so a github.com outage cannot block a release; validate.yml checks the URLs.
           appstreamcli validate --no-net --explain org.opentubex.OpenTubeX.metainfo.xml
           desktop-file-validate org.opentubex.OpenTubeX.desktop
