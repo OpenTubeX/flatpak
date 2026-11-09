@@ -166,8 +166,9 @@ class ReleaseWorkflowTest(unittest.TestCase):
     def test_prune_keeps_the_newest_nightlies_and_all_stable_releases(self):
         releases = [{"tagName": "v0.35.2-beta", "isPrerelease": False, "createdAt": "2026-01-01T00:00:00Z"}]
         releases += [
-            {"tagName": f"v0.35.2-nightly-{n}", "isPrerelease": True, "createdAt": f"2026-01-{n:02d}T02:30:00Z"}
-            for n in range(1, 9)
+            # Nightlies of the same commit share createdAt, and gh lists the newest first.
+            {"tagName": f"v0.35.{n // 10}-nightly-{n}", "isPrerelease": True, "createdAt": "2026-01-01T00:00:00Z"}
+            for n in (12, 11, 10, 9, 8, 7, 6, 5)
         ]
         with tempfile.TemporaryDirectory() as directory:
             work = Path(directory)
@@ -182,7 +183,7 @@ class ReleaseWorkflowTest(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stderr)
             deleted = [args[2] for args in map(json.loads, calls.read_text().splitlines())
                        if args[:2] == ["release", "delete"]]
-        self.assertEqual(deleted, ["v0.35.2-nightly-3", "v0.35.2-nightly-2", "v0.35.2-nightly-1"])
+        self.assertEqual(deleted, ["v0.35.0-nightly-7", "v0.35.0-nightly-6", "v0.35.0-nightly-5"])
 
     def test_lookup_error_does_not_create_release(self):
         result, mutations = self.run_publish({"error": 403})

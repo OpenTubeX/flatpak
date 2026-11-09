@@ -384,10 +384,11 @@ jobs:
           KEEP: 5
         run: |
           set -euo pipefail
-          gh release list --repo "$GH_REPO" --limit 1000 --json tagName,isPrerelease,createdAt |
+          # Sort by the nightly number: createdAt is the tagged commit's date, so it ties.
+          gh release list --repo "$GH_REPO" --limit 1000 --json tagName,isPrerelease |
             jq -r --argjson keep "$KEEP" '
-              [.[] | select(.isPrerelease and (.tagName | test("-nightly-[0-9]+$")))]
-              | sort_by(.createdAt) | reverse | .[$keep:][].tagName' |
+              [.[] | select(.isPrerelease) | .tagName | select(test("-nightly-[0-9]+$"))]
+              | sort_by(capture("-nightly-(?<n>[0-9]+)$").n | tonumber) | reverse | .[$keep:][]' |
             while read -r tag; do
               gh release delete "$tag" --repo "$GH_REPO" --cleanup-tag --yes
             done
