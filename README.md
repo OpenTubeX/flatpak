@@ -23,7 +23,8 @@ The workflow then:
    builds to the `stable` and `nightly` branches (stable releases update both,
    nightlies only `nightly`), signs the commits and summary, and deploys the
    repository with the landing page to GitHub Pages;
-4. for stable releases, attaches `.flatpak` bundles to a GitHub release.
+4. attaches `.flatpak` bundles to a GitHub release. Nightlies are prereleases,
+   and only the five newest are kept.
 
 Each branch keeps its current build and two older ones. The workflow prunes
 older commits on every publish to stay within the GitHub Pages size limit.

@@ -257,14 +257,12 @@ jobs:
         with:
           arch: ${{ matrix.arch }}
           bundle: org.opentubex.OpenTubeX-${{ matrix.arch }}.flatpak
-          build-bundle: ${{ needs.prepare.outputs.channel == 'stable' }}
           manifest-path: org.opentubex.OpenTubeX.yml
           upload-artifact: false
           keep-build-dirs: true
           cache-key: flatpak-builder-${{ matrix.arch }}-${{ needs.prepare.outputs.tag }}
 
       - name: Upload Flatpak bundle
-        if: needs.prepare.outputs.channel == 'stable'
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: flatpak-${{ matrix.arch }}
@@ -289,7 +287,6 @@ jobs:
   release:
     name: Publish GitHub release
     needs: [prepare, build]
-    if: needs.prepare.outputs.channel == 'stable'
     runs-on: ubuntu-latest
 
     permissions:
@@ -318,6 +315,7 @@ jobs:
           GH_REPO: ${{ github.repository }}
           TAG: ${{ needs.prepare.outputs.tag }}
           VERSION: ${{ needs.prepare.outputs.version }}
+          CHANNEL: ${{ needs.prepare.outputs.channel }}
         run: |
           set -euo pipefail
 
@@ -329,6 +327,12 @@ jobs:
           # or for ARM64:
           flatpak install --user ./org.opentubex.OpenTubeX-${TAG}-aarch64.flatpak
           \`\`\`"
+
+          if [[ "$CHANNEL" == nightly ]]; then
+            printf -v notes \
+              '> [!WARNING]\n> This nightly build is intended for testing only and may be unstable. Regular users should use the [latest non-prerelease](https://github.com/OpenTubeX/flatpak/releases/latest).\n\n%s' \
+              "$notes"
+          fi
 
           if release="$(gh api "repos/${GH_REPO}/releases/tags/${TAG}" 2>&1)"; then
             if jq --exit-status '.immutable == true' <<< "$release" >/dev/null; then
@@ -356,16 +360,37 @@ jobs:
               gh release edit "$TAG" --repo "$GH_REPO" --draft=false
             fi
           elif [[ "$release" == *"(HTTP 404)"* ]]; then
+            release_flags=()
+            if [[ "$CHANNEL" == nightly ]]; then
+              release_flags+=(--prerelease)
+            fi
             gh release create "$TAG" \
               "org.opentubex.OpenTubeX-${TAG}-x86_64.flatpak" \
               "org.opentubex.OpenTubeX-${TAG}-aarch64.flatpak" \
               --repo "$GH_REPO" \
               --title "OpenTubeX ${VERSION} (Flatpak)" \
+              "${release_flags[@]}" \
               --notes "$notes"
           else
             echo "$release" >&2
             exit 1
           fi
+
+      - name: Prune old nightly releases
+        if: needs.prepare.outputs.channel == 'nightly'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          KEEP: 5
+        run: |
+          set -euo pipefail
+          gh release list --repo "$GH_REPO" --limit 1000 --json tagName,isPrerelease,createdAt |
+            jq -r --argjson keep "$KEEP" '
+              [.[] | select(.isPrerelease and (.tagName | test("-nightly-[0-9]+$")))]
+              | sort_by(.createdAt) | reverse | .[$keep:][].tagName' |
+            while read -r tag; do
+              gh release delete "$tag" --repo "$GH_REPO" --cleanup-tag --yes
+            done
 
   publish-repo:
     name: Publish OSTree remote
