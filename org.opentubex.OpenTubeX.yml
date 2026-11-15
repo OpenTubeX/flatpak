@@ -30,15 +30,15 @@ modules:
       - type: file
         only-arches:
           - x86_64
-        url: https://github.com/OpenTubeX/OpenTubeX/releases/download/v0.38.0-beta/opentubex-0.38.0-beta-linux-x64-portable.zip
-        sha256: 2a03f2530017fa3e93107edecb2916f315366d5e8dbc2a78899e52532be6ccf6
+        url: https://github.com/OpenTubeX/OpenTubeX/releases/download/v0.38.1-beta/opentubex-0.38.1-beta-linux-x64-portable.zip
+        sha256: 8af8687f98b2e195afa082b97540b087eafcf01eff7956bcba938ea96c7ff810
       - type: file
         only-arches:
           - aarch64
-        url: https://github.com/OpenTubeX/OpenTubeX/releases/download/v0.38.0-beta/opentubex-0.38.0-beta-linux-arm64-portable.zip
-        sha256: 0d69b585ff09124d935d94b6eba987a73e7f103c0b3d782e9aea9720abb1f8d4
+        url: https://github.com/OpenTubeX/OpenTubeX/releases/download/v0.38.1-beta/opentubex-0.38.1-beta-linux-arm64-portable.zip
+        sha256: d7e330d7266652e407297d9ce45f3409fe872da861ff3c9dacb333007d3e84af
       - type: file
-        url: https://raw.githubusercontent.com/OpenTubeX/OpenTubeX/v0.38.0-beta/_icons/icon.svg
+        url: https://raw.githubusercontent.com/OpenTubeX/OpenTubeX/v0.38.1-beta/_icons/icon.svg
         sha256: 887200bb2efa01d5e389f817b7310faed59a2b7716b97382627f7d8fd03692b5
       - type: file
         path: run.sh
